@@ -6,8 +6,12 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 export const signUpAction = async (formData: FormData) => {
+  const role = formData.get("role")?.toString()!;
   const email = formData.get("email")?.toString();
   const password = formData.get("password")?.toString();
+  const firstName = formData.get("firstname")?.toString();
+  const lastName = formData.get("lastname")?.toString();
+  const phone = formData.get("phone")?.toString();
   const supabase = await createClient();
   const origin = (await headers()).get("origin");
 
@@ -19,23 +23,49 @@ export const signUpAction = async (formData: FormData) => {
     );
   }
 
-  const { error } = await supabase.auth.signUp({
+  const { data: user, error } = await supabase.auth.signUp({
     email,
     password,
+    phone: phone ? phone : "000",
+    
     options: {
+      data: {
+      firstName: firstName,
+        lastName: lastName,
+        role: role,
+        
+      },
       emailRedirectTo: `${origin}/auth/callback`,
     },
   });
+
 
   if (error) {
     console.error(error.code + " " + error.message);
     return encodedRedirect("error", "/sign-up", error.message);
   } else {
-    return encodedRedirect(
-      "success",
-      "/sign-up",
-      "Thanks for signing up! Please check your email for a verification link.",
-    );
+    const { error: userError } = await supabase
+        .from("users")
+        .insert([
+          {
+            id: user.user?.id,
+            email: email,
+            first_name: firstName,
+            last_name: lastName,
+            phone_number: phone,
+            role: role,
+          },
+        ]);
+      if (userError) {
+        console.error(userError.message);
+        return encodedRedirect("error", "/sign-up", userError.message);
+      }
+    return redirect(`/${role.toLowerCase()}/register`);
+    // return encodedRedirect(
+    //   "success",
+    //   "/sign-up",
+    //   "Thanks for signing up! Please check your email for a verification link.",
+    // );
   }
 };
 
@@ -44,16 +74,17 @@ export const signInAction = async (formData: FormData) => {
   const password = formData.get("password") as string;
   const supabase = await createClient();
 
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
-
+  const userRole = data.user?.user_metadata.role.toLowerCase();
+  console.log(userRole);
   if (error) {
     return encodedRedirect("error", "/sign-in", error.message);
   }
 
-  return redirect("/protected");
+  return redirect(`/${userRole}`);
 };
 
 export const forgotPasswordAction = async (formData: FormData) => {

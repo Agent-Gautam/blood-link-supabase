@@ -1,4 +1,4 @@
-import { signUpAction } from "@/app/actions";
+import { signUpAction } from "@/app/(auth-pages)/actions";
 import { FormMessage, Message } from "@/components/form-message";
 import { SubmitButton } from "@/components/submit-button";
 import { Input } from "@/components/ui/input";
@@ -29,8 +29,46 @@ export default async function Signup(props: {
           </Link>
         </p>
         <div className="flex flex-col gap-2 [&>input]:mb-3 mt-8">
+          <Label>Signup As</Label>
+
+          <Label
+            htmlFor="DONOR"
+            className="flex gap-2 items-center justify-start p-3 border rounded-md"
+          >
+            <Input
+              id="DONOR"
+              name="role"
+              type="radio"
+              required
+              value={"DONOR"}
+              className="w-5"
+            />
+            <h1>Donor</h1>
+          </Label>
+          <Label
+            htmlFor="ORGANISATION"
+            className="flex gap-2 items-center justify-start p-3 border rounded-md"
+          >
+            <Input
+              id="ORGANISATION"
+              name="role"
+              type="radio"
+              required
+              value={"ORGANISATION"}
+              className="w-5"
+            />
+            <h1>Organisation</h1>
+          </Label>
+          <Label htmlFor="firstname">Name</Label>
+          <Input name="firstname" placeholder="Your First name" required />
+          <Label htmlFor="lastname">Last name</Label>
+          <Input name="lastname" placeholder="Your Last name" required />
+          <Label htmlFor="phone">Phone</Label>
+          <Input name="phone" placeholder="Your phone number" required />
           <Label htmlFor="email">Email</Label>
           <Input name="email" placeholder="you@example.com" required />
+          {/* <Input name="verify-later" type="checkbox" />
+          <Label htmlFor="verify-later">Verify </Label> */}
           <Label htmlFor="password">Password</Label>
           <Input
             type="password"
