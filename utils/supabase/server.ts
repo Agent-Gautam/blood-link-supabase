@@ -24,6 +24,31 @@ export const createClient = async () => {
           }
         },
       },
-    },
+    }
   );
+};
+
+export const getUser = async () => {
+  const supabase = await createClient();
+  const {data} = await supabase.auth.getUser();
+  if (!data.user) {
+    return null;
+  }
+  const userId = data.user.id;
+  const {data: userInfo} = await (await supabase)
+    .from("users")
+    .select("*, organisations(id), donors(id)")
+    .eq("id", userId)
+    .single();
+  const userData = {
+    id: userInfo.id,
+    email: userInfo.email,
+    firstName: userInfo.first_name,
+    lastName: userInfo.last_name,
+    phoneNumber: userInfo.phone_number,
+    role: userInfo.role,
+    organisation_id: userInfo.organisations?.id,
+    donor_id: userInfo.donors?.id,
+  }
+  return userData;
 };
