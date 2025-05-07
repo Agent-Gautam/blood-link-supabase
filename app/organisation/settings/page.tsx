@@ -1,0 +1,1 @@
+//capcaity of each blood type currently - 200
