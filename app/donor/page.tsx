@@ -75,8 +75,8 @@ export default async function DonorDashboard() {
       </Link>
       {/* stats */}
       <DonorStats
-        lastDonationDate={data.last_donation_date}
-        nextEligibleDate={data.next_eligible_date}
+        lastDonationDate={data.last_donation_date ?? "N/A"}
+        nextEligibleDate={data.next_eligible_date ?? "N/A"}
         donationCounts={donationData?.length || 0}
       />
       <div className="mt-12">

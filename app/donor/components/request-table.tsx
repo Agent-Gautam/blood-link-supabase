@@ -1,5 +1,5 @@
 "use client"
-
+//task store in db who set the request fulfilled - donor or org ?
 import React, { useState } from "react";
 import {
   Table,
@@ -16,6 +16,7 @@ import { DropletIcon, CalendarIcon, CheckIcon, ClockIcon, Loader } from "lucide-
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 export interface BloodRequest {
   id: string;
@@ -36,6 +37,7 @@ export const DonorRequestTable: React.FC<RequestHistoryProps> = ({
   requests
 }) => {
   const router = useRouter();
+  const supabase = createClient();
   return (
     <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
       <Table>
@@ -53,7 +55,7 @@ export const DonorRequestTable: React.FC<RequestHistoryProps> = ({
         <TableBody>
           {requests.length > 0 ? (
             requests.map((request) => (
-              <TableRowComponent key={request.id} request={request} router={router}/>
+              <TableRowComponent key={request.id} request={request} router={router} supabase={supabase}/>
             ))
           ) : (
             <TableRow>
@@ -108,15 +110,17 @@ export const DonorRequestTable: React.FC<RequestHistoryProps> = ({
 const TableRowComponent = ({
   request,
   router,
+  supabase,
 }: {
   request: BloodRequest;
   router: AppRouterInstance;
+  supabase: SupabaseClient<any, "public", any>;
 }) => {
   const [loading, setLoading] = useState(false);
   const handleMarkFulfilled = async () => {
     setLoading(true);
     console.log(`Request ${request.id} marked fulfilled`);
-    const supabase = createClient();
+    
     const fulfilled_date = new Date().toISOString();
     const { data, error } = await supabase
       .from("blood_requests")

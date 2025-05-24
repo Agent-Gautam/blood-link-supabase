@@ -22,17 +22,20 @@ export default async function DonorStats({
         data={donationCounts || 0}
         icon={<DropletIcon />}
         additional="+2 from last year"
+        className=""
       />
       <StatBox
         heading="Last Donation Date"
         data={lastDonationDate.split("T")[0]}
         icon={<Heart />}
         additional="Impact"
+        className=""
       />
       <StatBox
         heading="Next Eligible Date"
         data={nextEligibleDate.split("T")[0]}
         icon={<Calendar />}
+        className=""
         additional={
           <div className="mt-4">
             {isEligibleToDonate ? (
