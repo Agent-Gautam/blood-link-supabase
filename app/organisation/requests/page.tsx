@@ -10,14 +10,10 @@ export default async function OrganisationRequestsPage() {
     return <div>Not authorized</div>;
   }
 
-  // Fetch blood requests for this organisation
-  const result = await fetchBloodRequests(user.organisation_id);
-  const requests = result?.success ? result.data : [];
-
   return (
     <div className="mt-12">
       <h2 className="text-2xl font-bold text-gray-800 mb-6">Blood Requests</h2>
-      <BloodRequests requests={requests} />
+      <BloodRequests org_id={user.organisation_id} />
     </div>
   );
 }

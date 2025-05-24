@@ -26,12 +26,16 @@ export async function RegisterOrganisation(formdata: FormData) {
         country: country,
         contact_number: contactNumber,
         user_id: userId,
-        inventoryOn: inventoryOn,
-        uniqueId: uniqueId
+        inventory_on: inventoryOn,
+        unique_id: uniqueId
     });
     if (error) {
         console.error(error.message);
-        return encodedRedirect("error", "/register/organisation", error.message);
+        return encodedRedirect(
+          "error",
+          "/organisation/register",
+          error.message
+        );
     }
     console.log("User registered successfully", data);
     redirect("/organisation");

@@ -5,16 +5,18 @@ type StatBoxProps = {
   data: number | string;
   icon: any;
   additional?: any;
+  className: string
 };
 
-export default async function StatBox({
+export default function StatBox({
   heading,
   data,
   icon,
   additional,
+  className
 }: StatBoxProps) {
   return (
-    <Card>
+    <Card className={className}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{heading}</CardTitle>
         {icon}

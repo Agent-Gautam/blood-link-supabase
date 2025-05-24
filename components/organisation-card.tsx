@@ -121,7 +121,7 @@ export default function OrganisationCard({
         </div>
         <TooltipProvider>
           <div className="grid grid-cols-4 gap-1.5">
-            {inventory.map((item, ind) => (
+            {inventory?.map((item, ind) => (
               <Tooltip key={ind}>
                 <TooltipTrigger asChild>
                   <div

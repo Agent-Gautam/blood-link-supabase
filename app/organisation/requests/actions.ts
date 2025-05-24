@@ -2,7 +2,8 @@
 
 import { createClient } from "@/utils/supabase/server";
 
-export default async function fetchBloodRequests( org_id: string,limit?: number) {
+export default async function fetchBloodRequests(org_id: string, limit?: number) {
+    console.log(org_id);
     const supabase = await createClient();
     const query = supabase
         .from("blood_requests")
@@ -13,7 +14,7 @@ export default async function fetchBloodRequests( org_id: string,limit?: number)
     }
     const { data, error } = await query;
     if (error) {
-        throw new Error(`Error fetching blood requests: ${error.message}`);
+        console.log(`Error fetching blood requests: ${error.message}`);
         return {success: false, error}
     }
     return {success: true, data};

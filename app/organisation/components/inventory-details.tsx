@@ -8,7 +8,6 @@ export default function InventoryDetails({
 }: {
   inventoryDetails: { blood_type: string; total_units: number, last_updated: string }[];
   }) {
-  console.log("inve: details: ", inventoryDetails);
   return (
     <div>
       <h2 className="text-xl font-bold mb-4">Blood Type Inventory</h2>
@@ -39,7 +38,6 @@ const BloodTypeCard: React.FC<BloodTypeCardProps> = ({
   lastUpdated,
   capacity = 200,
 }) => {
-  console.log("blood_type: ", bloodType);
   const percentage = Math.min(Math.round((units / capacity) * 100), 100);
   const getStatusColor = () => {
     if (percentage < 20) return "text-destructive";

@@ -19,7 +19,6 @@ import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
 import { RegisterOrganisation } from "./actions";
 import { FormMessage, Message } from "@/components/form-message";
-import { SearchParams } from "next/dist/server/request/search-params";
 
 export default async function OrganisationRegistration(props: {
   searchParams: Promise<Message>;
@@ -155,7 +154,7 @@ export default async function OrganisationRegistration(props: {
               </div>
               {/* do you want to keep inventory checkbox */}
               <div className="flex items-center space-x-2">
-                <input
+                <Input
                   type="checkbox"
                   name="inventory_on"
                   id="inventory_on"

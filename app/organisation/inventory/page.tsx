@@ -15,7 +15,7 @@ export default async function InventoryPage() {
     const org_id = user.organisation_id;
     const fetchResult = await fetchInventoryAction(org_id);
     const inventory = fetchResult?.data;
-
+  console.log("page called");
   return (
       <div>
           <Button><Link href={"/organisation/inventory/all"}>Open Inventory</Link></Button>

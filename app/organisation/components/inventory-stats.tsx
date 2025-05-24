@@ -31,10 +31,10 @@ export default function InventoryStats({
       />
       <StatBox
         heading="Universal Donor (O-)"
-        data={inventory[7].total_units}
+        data={inventory[7] ? inventory[7].total_units : "N/A"}
         icon={<Droplet className="h-4 w-4 text-purple-600" />}
         additional={
-          inventory[7].total_units < 30 ? "Critical level" : "Sufficient level"
+          inventory[7] ? inventory[7]?.total_units < 30 ? "Critical level" : "Sufficient level" : ""
         }
       />
     </div>

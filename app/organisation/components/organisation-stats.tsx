@@ -9,55 +9,64 @@ export default async function OrganisationStats({
 }: {
   org_id: string;
 }) {
-  let totalDonationCamps = [];
-  let totalDonors: any[] | null = [];
   const supabase = await createClient();
-  // fetching total donations
-  const { data: totalDonations, error } = await supabase
-    .from("donations")
-    .select("*", { count: "exact", head: true })
-    .eq("organisation_id", org_id);
-  // fetching total donations camps organised
-  const { data } = await supabase
-    .from("donation_camps")
-    .select("id")
-    .eq("organisation_id", org_id);
-  if (data) {
-    totalDonationCamps = data.map((value) => value.id);
-  }
 
-  // fetching total donors participated
-  if (totalDonationCamps.length > 0) {
-    const { data, error } = await supabase
-      .from("camp_registrations")
-      .select("donor_id")
-      .in("camp_id", totalDonationCamps);
-    totalDonors = data;
-    if (error) console.error("Error fetching unique donors:", error);
-  } else {
-    totalDonors = [];
-  }
+  const [
+    { count: totalDonations, error: donationsError },
+    { count: totalDonationCamps, error: campsError },
+    { count: donors, error: donorsError },
+  ] = await Promise.all([
+    supabase
+      .from("donations")
+      .select("*", { count: "exact", head: true })
+      .eq("organisation_id", org_id),
+    supabase
+      .from("donation_camps")
+      .select("id", { count: "exact", head: true })
+      .eq("organisation_id", org_id),
+    supabase
+      .from("donations")
+      .select("donor_id", { count: "exact", head: false })
+      .eq("organisation_id", org_id)
+      .not("donor_id", "is", null),
+  ]);
+
+  if (donationsError)
+    console.error("Error fetching donations:", donationsError);
+  if (campsError) console.error("Error fetching donation camps:", campsError);
+  if (donorsError) console.error("Error fetching unique donors:", donorsError);
+
   return (
-    <div>
+    <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 p-6 bg-white/95 backdrop-blur-sm rounded-xl shadow-xl border border-red-100">
       <StatBox
-        heading="Total collections"
+        heading="Total Collections"
         data={totalDonations || 0}
-        icon={<DropletIcon />}
+        icon={<DropletIcon className="h-8 w-8 text-bloodlink-red" />}
         additional="+2 from last year"
+        className="transition-transform duration-200 hover:scale-105 bg-white rounded-lg shadow-md p-6"
       />
       <StatBox
-        heading="Total donation camps"
-        data={totalDonationCamps?.length || 0}
-        icon={<PlusSquare />}
-        additional={"+1 from last year"}
+        heading="Donation Camps"
+        data={totalDonationCamps || 0}
+        icon={<PlusSquare className="h-8 w-8 text-bloodlink-red" />}
+        additional="+1 from last year"
+        className="transition-transform duration-200 hover:scale-105 bg-white rounded-lg shadow-md p-6"
       />
       <StatBox
-        heading="total participating donors"
-        data={totalDonors?.length || 0}
-        icon={<PersonStanding />}
-        additional={"+2 from last year"}
+        heading="Participating Donors"
+        data={donors || 0}
+        icon={<PersonStanding className="h-8 w-8 text-bloodlink-red" />}
+        additional="+2 from last year"
+        className="transition-transform duration-200 hover:scale-105 bg-white rounded-lg shadow-md p-6"
       />
-      <Link href={"/organisation/camp"}><Button>Organise a donation camp</Button></Link>
+      <div className="sm:col-span-2 lg:col-span-3 flex justify-center mt-4">
+        <Button
+          asChild
+          className="bg-bloodlink-red hover:bg-red-700 text-black font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+        >
+          <Link href="/organisation/camp">Organise a Donation Camp</Link>
+        </Button>
+      </div>
     </div>
   );
 }

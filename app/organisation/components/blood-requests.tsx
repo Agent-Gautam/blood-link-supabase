@@ -21,7 +21,7 @@ import {
 import { BloodRequest } from "@/app/donor/components/request-table";
 import { createClient } from "@/utils/supabase/client";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -33,12 +33,34 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-export default function BloodRequests({
-  requests,
-}: {
-  requests: BloodRequest[];
-}) {
-  const router = useRouter();
+import { formatDate } from "@/lib/utils";
+import fetchBloodRequests from "../requests/actions";
+import { toast } from "sonner";
+import { SupabaseClient } from "@supabase/supabase-js";
+export default function BloodRequests({ org_id }: { org_id: string }) {
+  const supabase = createClient();
+  const [requests, setRequests] = useState<BloodRequest[]>([]);
+  const [dataLoading, setDataLoading] = useState(false);
+  async function fetchRequests() {
+    console.log("function called org_id: ", org_id);
+    const requestResult = await fetchBloodRequests(org_id);
+    console.log("result: ",requestResult);
+    if (requestResult.error) {
+      console.error("Error fetching blood requests:", requestResult.error.message);
+      toast.error("Failed to fetch blood requests. Please try again.");
+      return;
+    }
+    setRequests(requestResult.data || []);
+  }
+  useEffect(() => { fetchRequests(); }, [])
+  // function handleRequestChange(id: string, newStatus: "FULFILLED"|"ACKNOWLEDGED") {
+  //   setRequests((prevRequests: BloodRequest[]) =>
+  //     prevRequests.map((request) =>
+  //       request.id === id ? { ...request, status: newStatus } : request
+  //     )
+  //   );
+
+  // }
   return (
     <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
       <Table>
@@ -58,7 +80,8 @@ export default function BloodRequests({
               <TableRowComponent
                 key={request.id}
                 request={request}
-                router={router}
+                fetchRequests={fetchRequests}
+                supabase={supabase}
               />
             ))
           ) : (
@@ -113,21 +136,20 @@ const getStatusBadge = (status: string) => {
 
 const TableRowComponent = ({
   request,
-  router,
+  fetchRequests,
+  supabase,
 }: {
   request: BloodRequest;
-  router: AppRouterInstance;
+  fetchRequests: () => void;
+  supabase: SupabaseClient<any, "public", any>;
 }) => {
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState(request.status);
   const [dialogOpen, setDialogOpen] = useState(false);
-
   // Generalized handler for status update
   const handleStatusUpdate = async (
     newStatus: "ACKNOWLEDGED" | "FULFILLED"
   ) => {
     setLoading(true);
-    const supabase = createClient();
     const updateData: any = { status: newStatus };
     if (newStatus === "FULFILLED") {
       updateData.fulfilled_date = new Date().toISOString();
@@ -138,18 +160,16 @@ const TableRowComponent = ({
       .eq("id", request.id);
 
     if (error) {
-      console.error("Error updating request status:", error.message);
-    } else {
-      setStatus(newStatus);
+      toast.error(`Error updating request status: ${error.message}`);
     }
     setLoading(false);
     setDialogOpen(false);
-    router.refresh();
+    fetchRequests();
   };
 
   // Button and dialog logic
   let actionButton = null;
-  if (status === "PENDING") {
+  if (request.status === "PENDING") {
     actionButton = (
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>
@@ -170,7 +190,7 @@ const TableRowComponent = ({
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Are you absolutely sure?</DialogTitle>
+            <DialogTitle>Mark the request as Acknowledged</DialogTitle>
             <DialogDescription>
               This will mark the request as <b>ACKNOWLEDGED</b>.
             </DialogDescription>
@@ -194,7 +214,7 @@ const TableRowComponent = ({
         </DialogContent>
       </Dialog>
     );
-  } else if (status === "ACKNOWLEDGED") {
+  } else if (request.status === "ACKNOWLEDGED") {
     actionButton = (
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogTrigger asChild>
@@ -235,13 +255,13 @@ const TableRowComponent = ({
         </DialogContent>
       </Dialog>
     );
-  } else if (status === "FULFILLED") {
+  } else if (request.status === "FULFILLED") {
     actionButton = (
       <div className="flex items-center justify-end gap-2 text-sm text-gray-500">
         <ClockIcon className="h-3.5 w-3.5" />
         <span>
           {request.fulfilled_date
-            ? request.fulfilled_date
+            ? `fulfilled on ${formatDate(request.fulfilled_date).date}`
             : "Date not recorded"}
         </span>
       </div>
@@ -273,10 +293,10 @@ const TableRowComponent = ({
       <TableCell>
         <div className="flex items-center gap-2 text-sm text-gray-600">
           <CalendarIcon className="h-3.5 w-3.5" />
-          {request.request_date}
+          {formatDate(request.request_date).date}
         </div>
       </TableCell>
-      <TableCell>{getStatusBadge(status)}</TableCell>
+      <TableCell>{getStatusBadge(request.status)}</TableCell>
       <TableCell className="text-right">{actionButton}</TableCell>
     </TableRow>
   );
