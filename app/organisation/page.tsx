@@ -13,6 +13,10 @@ import BloodRequests from "./components/blood-requests";
 import InventoryShowcase from "./components/inventory-showcase";
 import { redirect } from "next/navigation";
 import CampDetailsShow from "./components/camp-details";
+import ShowMap from "@/components/show-map";
+
+// import Map from "@/components/map";
+// import MapClient from "@/components/Map-client";
 
 export default async function OrganisationDashboard() {
   const supabase = await createClient();
@@ -194,6 +198,7 @@ export default async function OrganisationDashboard() {
             <InventoryShowcase org_id={orgData.id} />
           </div>
         </Card>
+        <ShowMap />
       </div>
     </div>
   );
