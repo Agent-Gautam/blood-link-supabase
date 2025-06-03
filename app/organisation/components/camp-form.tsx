@@ -8,6 +8,8 @@ import SelectBloodBanks from "./select-blood-bank";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
@@ -15,6 +17,16 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Loader } from "lucide-react";
+import dynamic from "next/dynamic";
+import { Coordinates, Location } from "@/lib/types";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import GeoLocation from "@/components/location/geo-location-access";
+const MapWithSearch = dynamic(
+  () => import("@/components/location/map-with-search"),
+  {
+    ssr: false,
+  }
+);
 
 export type CampDetailsType = {
   name: string;
@@ -36,17 +48,43 @@ export default function CampForm({
   inventoryOn: boolean | null;
   org_id: string;
 }) {
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+  const [location, setLocation] = useState<Location>();
   const [selectedBloodBank, setSelectedBloodBank] = useState<string | null>(
     null
   );
   const [loading, setLoading] = useState(false);
+
+  const handleLocationChange = (
+    newLocation: Location,
+    newCoordinates: Coordinates
+  ) => {
+    if (newCoordinates.lat && newCoordinates.lng && newLocation.address) {
+      setLocation(newLocation);
+      setCoordinates(newCoordinates);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if(!selectedBloodBank && !inventoryOn) {
+    if (!selectedBloodBank && !inventoryOn) {
       toast.error("Please select a blood bank");
       return;
     }
+    if (
+      !location ||
+      !location.state ||
+      !location.city ||
+      !location.country ||
+      !coordinates
+    ) {
+      toast.error("Please select a valid location from the map");
+      return;
+    }
     const formData = new FormData(e.currentTarget);
+    formData.set("latitude", coordinates.lat.toString());
+    formData.set("longitude", coordinates.lng.toString());
+    formData.set("location", location.address);
     setLoading(true);
     toast.loading("Creating camp...");
     const response = await CreateCampAction(formData);
@@ -67,7 +105,7 @@ export default function CampForm({
   }
   return (
     <form
-      className="flex flex-col min-w-64 max-w-64 mx-auto"
+      className="flex flex-col max-w-[500px] mx-auto"
       onSubmit={handleSubmit}
     >
       <h1 className="text-2xl font-medium">Create Camp</h1>
@@ -80,33 +118,65 @@ export default function CampForm({
           required
         />
 
-        <Label htmlFor="location">Location</Label>
-        <Input
-          name="location"
-          placeholder="Location"
-          defaultValue={campData?.location}
-          required
-        />
-
-        <Label htmlFor="latitude">Latitude</Label>
-        <Input
-          name="latitude"
-          placeholder="Latitude"
-          type="number"
-          step="any"
-          defaultValue={campData?.latitude}
-          required
-        />
-
-        <Label htmlFor="longitude">Longitude</Label>
-        <Input
-          name="longitude"
-          placeholder="Longitude"
-          type="number"
-          step="any"
-          defaultValue={campData?.longitude}
-          required
-        />
+        <div className="space-y-2 flex flex-col gap-2">
+          <label className="text-sm font-medium">Location*</label>
+          {location && (
+            <Card className="bg-gray-50 border border-gray-200 shadow-none">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base font-semibold">
+                  Selected Location
+                </CardTitle>
+                <CardDescription className="text-xs">
+                  Please verify your location details below.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="py-2">
+                <div className="space-y-1 text-sm">
+                  <div>
+                    <span className="font-medium">Address:</span>{" "}
+                    <span>{location.address || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">City:</span>{" "}
+                    <span>{location.city || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">State:</span>{" "}
+                    <span>{location.state || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">Pincode:</span>{" "}
+                    <span>{location.postalCode || "—"}</span>
+                  </div>
+                  <div>
+                    <span className="font-medium">Country:</span>{" "}
+                    <span>{location.country || "—"}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+          <GeoLocation onLocationSet={handleLocationChange} />
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button type="button" className="mt-2 bg-blue-600 text-white">
+                Select Location on Map
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl w-full h-[80vh] p-0">
+              <DialogHeader className="bg-red-300 sr-only">
+                <DialogTitle>Select Location</DialogTitle>
+                <DialogDescription>
+                  Search for a location or click on the map to select.
+                </DialogDescription>
+              </DialogHeader>
+              <MapWithSearch
+                initialCoordinates={coordinates}
+                handleLocationChange={handleLocationChange}
+              />
+            </DialogContent>
+          </Dialog>
+        </div>
 
         <Label htmlFor="start_date">Start Date</Label>
         <Input

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { RegisterDonor } from "../register/actions";
 import { toast } from "sonner";
+import GeoLocationAccess from "@/archives/map/geo-location-access";
 
 const sortOptions = [
   { label: "Start Date (Asc)", value: "start_date-asc" },
@@ -84,6 +85,7 @@ export default function DonationCampsPage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">Donation Camps</h1>
+      <GeoLocationAccess />
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         <Input
           placeholder="Search by camp name..."

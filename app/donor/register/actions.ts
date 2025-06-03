@@ -1,8 +1,6 @@
 "use server";
 
 import { createClient, getUser } from "@/utils/supabase/server";
-import { encodedRedirect } from "@/utils/utils";
-import { redirect } from "next/navigation";
 
 
 export async function RegisterDonor(formdata: FormData) {
@@ -16,7 +14,11 @@ export async function RegisterDonor(formdata: FormData) {
     const healthConditions = formdata.get("healthConditions")?.toString();
     const address = formdata.get("address")?.toString();
     const city = formdata.get("city")?.toString();
+    const state = formdata.get("state")?.toString();
     const country = formdata.get("country")?.toString();
+    const postcode = formdata.get("postcode")?.toString();
+    const latitude = formdata.get("lat")?.toString();
+    const longitude = formdata.get("lng")?.toString();
     
     const { data, error } = await supabase.from("donors").insert({
         blood_type: bloodtype,
@@ -27,12 +29,14 @@ export async function RegisterDonor(formdata: FormData) {
         health_conditions: healthConditions,
         address: address,
         city: city,
+        state: state,
         country: country,
+        postcode: postcode,
+        location: `POINT(${longitude} ${latitude})`
     });
     if (error) {
         console.error(error.message);
-        return encodedRedirect("error", "/register/donor", error.message);
+        return {success: false, error: error.message};
     }
-    console.log("User registered successfully", data);
-    redirect("/donor");
+    return { success: true, data, message: "Successfully registered as a donor" };
 }

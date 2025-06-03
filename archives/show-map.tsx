@@ -1,8 +1,8 @@
-"use client"
+"use client";
 
-import Map from "@/components/Map-client";
+import Map from "@/archives/Map-client";
 export default function ShowMap() {
-    const DEFAULT_CENTER = [38.907132, -77.036546];
+  const DEFAULT_CENTER = [38.907132, -77.036546];
   return (
     <Map width="800" height="400" center={DEFAULT_CENTER} zoom={12}>
       {({ TileLayer, Marker, Popup }) => (

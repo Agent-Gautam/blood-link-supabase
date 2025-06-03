@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+"use client";
+
+import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -15,22 +17,98 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+  DialogDescription,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
-import { FormMessage, Message } from "@/components/form-message";
 import { RegisterDonor } from "./actions";
+import { toast } from "sonner";
+import { redirect } from "next/navigation";
+import GeoLocation from "@/components/location/geo-location-access";
+import { Coordinates, Location } from "@/lib/types";
+// import MapWithSearch from "@/components/location/map-with-search";
+// import OriginalMap from "@/components/location/original-code";
+import dynamic from "next/dynamic";
+const MapComponent = dynamic(
+  () => import("@/components/location/map-with-search"),
+  {
+    ssr: false,
+  }
+);
 
-const SimpleRegistration = async (props: {
-  searchParams: Promise<Message>;
-}) => {
-  const searchParams = await props.searchParams;
-    if ("message" in searchParams) {
-      return (
-        <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
-          <FormMessage message={searchParams} />
-        </div>
-      );
+export default function DonorRegistration() {
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+  const [location, setLocation] = useState<Location>();
+  const [showMap, setShowMap] = useState(false);
+
+  const handleSubmit = async (formData: FormData) => {
+    // Client-side validation
+    const bloodType = formData.get("bloodType")?.toString();
+    const dateOfBirth = formData.get("dateOfBirth")?.toString();
+    const gender = formData.get("gender")?.toString();
+
+    // Validate required fields
+    if (!bloodType) {
+      toast.error("Blood type is required");
+      return;
     }
+    if (!dateOfBirth) {
+      toast.error("Date of birth is required");
+      return;
+    }
+    if (!gender) {
+      toast.error("Gender is required");
+      return;
+    }
+    if (
+      !location ||
+      !location.state ||
+      !location.city ||
+      !location.country ||
+      !coordinates
+    ) {
+      toast.error("Please select a valid location from the map");
+      return;
+    }
+
+    // Append location fields to FormData
+    formData.set("address", location.address);
+    formData.set("city", location.city);
+    formData.set("state", location.state);
+    formData.set("postcode", location.postalCode);
+    formData.set("country", location.country);
+    formData.set("lat", coordinates.lat.toString());
+    formData.set("lng", coordinates.lng.toString());
+
+    // Call server action
+    toast.loading("Registering...");
+    const result = await RegisterDonor(formData);
+    toast.dismiss();
+
+    if (!result.success) {
+      toast.error(`Registration failed: ${result.error}`);
+      return;
+    }
+
+    toast.success(result.message || "Successfully registered as a donor");
+    redirect("/donor");
+  };
+
+  const handleLocationChange = (
+    newLocation: Location,
+    newCoordinates: Coordinates
+  ) => {
+    if (newCoordinates.lat && newCoordinates.lng && newLocation.address) {
+      setLocation(newLocation);
+      setCoordinates(newCoordinates);
+    }
+  };
   return (
     <div className="container mx-auto py-10 px-4">
       <div className="max-w-md mx-auto">
@@ -41,7 +119,7 @@ const SimpleRegistration = async (props: {
               Please provide your blood donation information.
             </CardDescription>
           </CardHeader>
-          <form>
+          <form action={handleSubmit}>
             <CardContent className="space-y-6">
               {/* Blood Type */}
               <div className="space-y-2">
@@ -70,13 +148,13 @@ const SimpleRegistration = async (props: {
                 <label htmlFor="dateOfBirth" className="text-sm font-medium">
                   Date of Birth*
                 </label>
-                <Input name="dateOfBirth" type="date" required></Input>
+                <Input name="dateOfBirth" type="date" required />
               </div>
 
               {/* Gender */}
               <div className="space-y-2">
                 <label htmlFor="gender" className="text-sm font-medium">
-                  Gender
+                  Gender*
                 </label>
                 <Select name="gender" required>
                   <SelectTrigger>
@@ -93,47 +171,77 @@ const SimpleRegistration = async (props: {
                 </Select>
               </div>
 
-              {/* address */}
-              <div className="space-y-2">
-                <label htmlFor="address" className="text-sm font-medium">
-                  Address
-                </label>
-                <Input
-                  name="address"
-                  placeholder="Your address"
-                  required
-                ></Input>
+              {/* Location Fields */}
+              <div className="space-y-2 flex flex-col gap-2">
+                <label className="text-sm font-medium">Location*</label>
+                {location && (
+                  <Card className="bg-gray-50 border border-gray-200 shadow-none">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base font-semibold">
+                        Selected Location
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Please verify your location details below.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="py-2">
+                      <div className="space-y-1 text-sm">
+                        <div>
+                          <span className="font-medium">Address:</span>{" "}
+                          <span>{location.address || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">City:</span>{" "}
+                          <span>{location.city || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">State:</span>{" "}
+                          <span>{location.state || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Pincode:</span>{" "}
+                          <span>{location.postalCode || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Country:</span>{" "}
+                          <span>{location.country || "—"}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                <GeoLocation onLocationSet={handleLocationChange} />
+                <Dialog open={showMap} onOpenChange={setShowMap}>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      className="mt-2 bg-blue-600 text-white"
+                    >
+                      Select Location on Map
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl w-full h-[80vh] p-0">
+                    <DialogHeader className="bg-red-300 sr-only">
+                      <DialogTitle>Select Location</DialogTitle>
+                      <DialogDescription>
+                        Search for a location or click on the map to select.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <MapComponent initialCoordinates={coordinates}
+  handleLocationChange={handleLocationChange} />
+                  </DialogContent>
+                </Dialog>
               </div>
 
-              {/* city */}
-              <div className="space-y-2">
-                <label htmlFor="city" className="text-sm font-medium">
-                  City
-                </label>
-                <Input name="city" placeholder="Your city" required></Input>
-              </div>
-
-              {/* country */}
-              <div className="space-y-2">
-                <label htmlFor="country" className="text-sm font-medium">
-                  Country
-                </label>
-                <Input
-                  name="country"
-                  placeholder="Your country"
-                  required
-                ></Input>
-              </div>
-
-              {/* id anonymous */}
-              <div>
+              {/* Anonymous Checkbox */}
+              <div className="flex items-center space-x-2">
+                <Input name="anonymous" type="checkbox" className="h-4 w-4" />
                 <label htmlFor="anonymous" className="text-sm font-medium">
-                  keep me Anonymous
+                  Keep me anonymous
                 </label>
-                <Input name="anonymous" type="checkbox" />
               </div>
 
-              {/* health conditions */}
+              {/* Health Conditions */}
               <div className="space-y-2">
                 <label
                   htmlFor="healthConditions"
@@ -144,23 +252,20 @@ const SimpleRegistration = async (props: {
                 <Input
                   name="healthConditions"
                   placeholder="List any health conditions (if any)"
-                ></Input>
+                />
               </div>
             </CardContent>
             <CardFooter>
               <SubmitButton
-                formAction={RegisterDonor}
+                formAction={handleSubmit}
                 pendingText="Registering..."
               >
                 Register
               </SubmitButton>
-              <FormMessage message={searchParams} />
             </CardFooter>
           </form>
         </Card>
       </div>
     </div>
   );
-};
-
-export default SimpleRegistration;
+}

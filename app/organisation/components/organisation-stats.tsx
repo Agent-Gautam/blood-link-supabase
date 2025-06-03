@@ -64,7 +64,7 @@ export default async function OrganisationStats({
           asChild
           className="bg-bloodlink-red hover:bg-red-700 text-black font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
         >
-          <Link href="/organisation/camp">Organise a Donation Camp</Link>
+          <Link href="/organisation/camps/update">Organise a Donation Camp</Link>
         </Button>
       </div>
     </div>
