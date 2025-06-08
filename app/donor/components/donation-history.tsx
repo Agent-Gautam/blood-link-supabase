@@ -49,9 +49,9 @@ export default async function DonationHistory({
           <TableBody>
             {donationData?.map((donation) => (
               <TableRow key={donation.id}>
-                <TableCell>{donation.donation_date}</TableCell>
-                <TableCell>{donation.donation_camps.location}</TableCell>
-                <TableCell>{donation.units_donated}</TableCell>
+                <TableCell>{donation?.donation_date}</TableCell>
+                <TableCell>{donation?.donation_camps?.location}</TableCell>
+                <TableCell>{donation?.units_donated}</TableCell>
                 <TableCell>
                   <Badge className="bg-green-500">{donation.status}</Badge>
                 </TableCell>

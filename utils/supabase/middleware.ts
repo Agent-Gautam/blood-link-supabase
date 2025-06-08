@@ -38,25 +38,35 @@ export const updateSession = async (request: NextRequest) => {
     // This will refresh session if expired - required for Server Components
     // https://supabase.com/docs/guides/auth/server-side/nextjs
     const user = await supabase.auth.getUser();
+    const userRole = user.data?.user?.user_metadata.role;
+    const pathname = request.nextUrl.pathname;
 
     // protected routes
-    if (request.nextUrl.pathname.startsWith("/protected") && user.error) {
+    if (
+      (pathname.startsWith("/donor") ||
+      pathname.startsWith("/organisation") ||
+      pathname.startsWith("/admin")) &&
+      user.error
+    ) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
 
-    // if (request.nextUrl.pathname === "/" && !user.error) {
+    // if (pathname === "/" && !user.error) {
     //   return NextResponse.redirect(new URL("/protected", request.url));
     // }
-    if (request.nextUrl.pathname.startsWith("/organisation")) {
-      if (user.data?.user?.user_metadata.role !== "ORGANISATION") {
+    if (pathname.startsWith("/organisation")) {
+      if (userRole !== "ORGANISATION") {
       return NextResponse.redirect(new URL("/not-found", request.url));
       }
     }
 
-    if (request.nextUrl.pathname.startsWith("/donor")) {
-      if (user.data?.user?.user_metadata.role !== "DONOR") {
+    if (pathname.startsWith("/donor")) {
+      if (userRole !== "DONOR") {
         return NextResponse.redirect(new URL("/not-found", request.url));
       }
+    }
+    if (request.nextUrl.pathname.startsWith("/admin") && ['DONOR','ORGANISATION'].includes(userRole)) {
+      return NextResponse.redirect(new URL("/not-found", request.url));
     }
     return response;
   } catch (e) {
