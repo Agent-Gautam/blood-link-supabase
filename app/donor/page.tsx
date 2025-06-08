@@ -56,7 +56,7 @@ export default async function DonorDashboard() {
     donation_date,
     status,
     organisations!donations_organisation_id_fkey (name),
-    donation_camps!fk_donation_camp(location)
+    donation_camps!fk_donations_camp(location)
   `
     )
     .eq("donor_id", data.id);
