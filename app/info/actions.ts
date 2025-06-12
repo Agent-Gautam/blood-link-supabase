@@ -80,10 +80,8 @@ export async function fetchCampDetails(campId: string) {
   const supabase = await createClient();
   try {
     const { data, error } = await supabase
-      .from("donation_camps")
-      .select(
-        "*, organisations:organisation_id(id, name, type), blood_bank:blood_bank_id(name, location, contact_number)"
-      )
+      .from("donation_camps_with_details")
+      .select("*")
       .eq("id", campId)
       .single();
     if (error && error.code === "PGRST116") {
@@ -93,21 +91,27 @@ export async function fetchCampDetails(campId: string) {
       console.log("Error fetching camp details:", error);
       return { success: false, message: error.message };
     }
+
     const campData = {
       id: data.id,
       name: data.name,
       location: data.location,
       startDate: data.start_date,
       endDate: data.end_date,
+      latitude: data.latitude,
+      longitude: data.longitude,
       organization: {
-        id: data.organisations.id,
-        name: data.organisations.name,
-        type: data.organisations.type,
+        id: data.organisation_id,
+        name: data.organisation_name,
+        type: data.organisation_type,
+        address: data.organisation_address,
+        contactNumber: data.organisation_contact_number,
       },
       bloodBank: {
-        name: data.blood_bank?.name,
-        location: data.blood_bank?.location,
-        contactNumber: data.blood_bank?.contact_number,
+        id: data.blood_bank_id,
+        name: data.blood_bank_name,
+        contactNumber: data.blood_bank_contact_number,
+        address: data.blood_bank_address,
       },
     };
     return { success: true, data: campData };

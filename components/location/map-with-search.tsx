@@ -33,15 +33,14 @@ export default function MapWithSearch({
   const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [message, setMessage] = useState<string>("");
   const [marker, setMarker] = useState<any>(null);
+  const [pinMarker, setPinMarker] = useState<any>(null);
 
   const dropMarker = async (e: any) => {
     console.log(e);
     if (e.target.getZoom() < 20) {
-        setMessage("Zoom in to level 20 to get accurate results");
-      toast.message(
-        `Zoom in to level 20 to get accurate results`
-      );
-        return;
+      setMessage("Zoom in to level 20 to get accurate results");
+      toast.message(`Zoom in to level 20 to get accurate results`);
+      return;
     }
     if (marker) marker.remove();
     const { lat, lng } = e.lngLat;
@@ -128,25 +127,33 @@ export default function MapWithSearch({
               placeSearchRef.current,
               optional_config,
               (data: any) => {
-                console.log(data);
                 if (data.error) {
                   setMessage("Search not working");
                   return;
                 }
                 const eloc = data[0].eLoc;
-                console.log(eloc);
                 const location = data[0].placeName + data[0].placeAddress;
-                console.log(
-                  mapplsPluginObject.pinMarker({
+                if (pinMarker) pinMarker.remove();
+                const pinMarkerObj = mapplsPluginObject.pinMarker(
+                  {
                     map: newMap,
                     pin: eloc,
                     popupHtml: location,
-                    icon: {url: "/place-search-icon.png", width: 40, height: 40},
+                    icon: {
+                      url: "/place-search-icon.png",
+                      width: 40,
+                      height: 40,
+                    },
                   },
                   (mark: any) => {
+                    setTimeout(() => {
+                      mark.remove();
+                    }, 2000);
                     mark.fitbounds({ padding: 100 });
-                  })
+                  }
                 );
+                
+                
                 //  console.log(mark);
                 // mark.fitbounds({ padding: 100 });
                 // var options = {
@@ -187,7 +194,6 @@ export default function MapWithSearch({
     };
   }, []);
   return (
-    
     <div className="relative size-full">
       <div
         id="map"

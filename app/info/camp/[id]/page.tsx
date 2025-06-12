@@ -14,52 +14,73 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { fetchCampDetails } from "../../actions";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import MapComponent from "@/components/location/map-component";
+import { createClient, getUser } from "@/utils/supabase/server";
 
 interface CampDetails {
+  id: string;
+  name: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  latitude: number;
+  longitude: number;
+  organization: {
     id: string;
     name: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    organization: {
-      id: string;
-      name: string;
-      type: string;
-    };
-    bloodBank: {
-      name: string;
-      location: string;
-      contactNumber: string;
-    };
-    // status: "upcoming" | "ongoing" | "completed";
-    // expectedDonors: number;
-    bannerUrl?: string;
+    type: string;
+    address: string;
+    contactNumber: string;
   };
+  bloodBank: {
+    id: string;
+    name: string;
+    address: string;
+    contactNumber: string;
+  };
+  // status: "upcoming" | "ongoing" | "completed";
+  // expectedDonors: number;
+  bannerUrl?: string;
+}
 
-export default async function CampDetails({ params }: { params: { id: string } }) {
-    const searchParams = await params;
-    const campId = searchParams.id;
-    const res = await fetchCampDetails(campId);
-    if (!res.success) {
-      return (
-        <div className="max-w-4xl mx-auto p-6">
-          <h1 className="text-2xl font-bold text-red-600">Error</h1>
-          <p className="text-red-500">{res.message}</p>
-        </div>
-      );
-    }
-    const camp: CampDetails = res.data!;
+export default async function CampDetails({
+  params,
+}: {
+  params: { id: string };
+}) {
+  const searchParams = await params;
+  const campId = searchParams.id;
+  const res = await fetchCampDetails(campId);
+  if (!res.success) {
+    return (
+      <div className="max-w-4xl mx-auto p-6">
+        <h1 className="text-2xl font-bold text-red-600">Error</h1>
+        <p className="text-red-500">{res.message}</p>
+      </div>
+    );
+  }
+  const camp: CampDetails = res.data!;
+  const supabase = await createClient();
+  const user = await getUser();
+  let userCoordinates = null;
+  if (user?.role == 'DONOR') {
+    const { data, error } = await supabase.from("donors").select("latitude, longitude").match({ user_id: user.id }).single();
+    console.log(data);
+    if(data) {userCoordinates = { lat: data?.latitude, lng: data?.longitude };}
+    
+  }
 
-    const getStatusColor = (status: string) => {
-      switch (status) {
-        case "upcoming":
-          return "bg-blue-100 text-blue-700 border-blue-200";
-        case "ongoing":
-          return "bg-green-100 text-green-700 border-green-200";
-        case "completed":
-          return "bg-gray-100 text-gray-700 border-gray-200";
-        default:
-          return "bg-gray-100 text-gray-700 border-gray-200";
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "upcoming":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      case "ongoing":
+        return "bg-green-100 text-green-700 border-green-200";
+      case "completed":
+        return "bg-gray-100 text-gray-700 border-gray-200";
+      default:
+        return "bg-gray-100 text-gray-700 border-gray-200";
     }
   };
 
@@ -184,8 +205,14 @@ export default async function CampDetails({ params }: { params: { id: string } }
                   <p className="text-sm text-muted-foreground">
                     Organization ID: {camp.organization.id}
                   </p>
+                  <p className="text-sm text-muted-foreground">
+                    Address: {camp.organization.address}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Contact: {camp.organization.contactNumber}
+                  </p>
                 </div>
-                <Link href={`/organizations/${camp.organization.id}`}>
+                <Link href={`/info/organisation/${camp.organization.id}`}>
                   <Button variant="outline" size="sm">
                     View Details
                     <ExternalLink className="w-4 h-4 ml-2" />
@@ -205,37 +232,37 @@ export default async function CampDetails({ params }: { params: { id: string } }
                 Blood Bank
               </CardTitle>
             </CardHeader>
-                      {
-                          camp.bloodBank.name ? (<CardContent className="space-y-4">
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-sm font-medium text-muted-foreground">
-                                  Name
-                                </label>
-                                <p className="font-semibold">{camp.bloodBank.name}</p>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-muted-foreground">
-                                  Location
-                                </label>
-                                <div className="flex items-start gap-2 mt-1">
-                                  <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
-                                  <span className="text-sm">{camp.bloodBank.location}</span>
-                                </div>
-                              </div>
-                              <div>
-                                <label className="text-sm font-medium text-muted-foreground">
-                                  Contact
-                                </label>
-                                <p className="text-sm">{camp.bloodBank.contactNumber}</p>
-                              </div>
-                            </div>
-                          </CardContent>):(
-                            <CardContent className="text-center text-muted-foreground">
-                              <p>No blood bank information available.</p>
-                            </CardContent>
-                          )
-            }
+            {camp.bloodBank.name ? (
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Name
+                    </label>
+                    <p className="font-semibold">{camp.bloodBank.name}</p>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Address
+                    </label>
+                    <div className="flex items-start gap-2 mt-1">
+                      <MapPin className="w-4 h-4 text-muted-foreground mt-0.5" />
+                      <span className="text-sm">{camp.bloodBank.address}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-muted-foreground">
+                      Contact
+                    </label>
+                    <p className="text-sm">{camp.bloodBank.contactNumber}</p>
+                  </div>
+                </div>
+              </CardContent>
+            ) : (
+              <CardContent className="text-center text-muted-foreground">
+                <p>No blood bank information available.</p>
+              </CardContent>
+            )}
           </Card>
 
           {/* Quick Actions */}
@@ -252,10 +279,31 @@ export default async function CampDetails({ params }: { params: { id: string } }
                 <Calendar className="w-4 h-4 mr-2" />
                 Schedule Reminder
               </Button>
-              <Button className="w-full" variant="outline">
-                <MapPin className="w-4 h-4 mr-2" />
-                Get Directions
-              </Button>
+              {camp.latitude && camp.longitude && userCoordinates && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" variant="outline">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Get Directions
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl w-full h-[80vh] p-0">
+                    <DialogHeader className="bg-red-300 sr-only">
+                  <DialogTitle>Donation Camp Directions</DialogTitle>
+                      <DialogDescription>
+                        Take directions to the donation camp
+                      </DialogDescription>
+                    </DialogHeader>
+                    <MapComponent
+                      startMarkersData={userCoordinates}
+                      endMarkersData={{
+                        lat: camp.latitude,
+                        lng: camp.longitude,
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
+              )}
             </CardContent>
           </Card>
 
