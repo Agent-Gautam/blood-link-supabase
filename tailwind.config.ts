@@ -3,10 +3,11 @@ import type { Config } from "tailwindcss";
 const config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}", // App Router files
+    "./components/**/*.{ts,tsx}", // Shared components
+    "./donor/**/*.{ts,tsx}", // Donor pages
+    "./organisation/**/*.{ts,tsx}", // Org pages
+    "./(auth-pages)/**/*.{ts,tsx}", // Your custom folder
   ],
   prefix: "",
   theme: {
@@ -53,9 +54,9 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
         bloodRed: {
-          DEFAULT: "#E53E3E",
-          light: "#FC8181",
-          dark: "#9B2C2C",
+          DEFAULT: "#E53E3E", // deeper red
+          light: "#FF6B6B", // brighter for light mode
+          dark: "#A4161A", // richer for dark mode
         },
       },
       borderRadius: {
