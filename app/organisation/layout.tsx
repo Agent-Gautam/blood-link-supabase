@@ -55,7 +55,7 @@ const sideBarItems = [
           <header className="sticky top-0 z-40 bg-background border-b border-border px-4 py-3 flex items-center">
             <SidebarTrigger className="mr-2" />
           </header>
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1">{children}</main>
         </div>
       </div>
     </SidebarProvider>

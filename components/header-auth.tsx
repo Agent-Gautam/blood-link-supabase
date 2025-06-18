@@ -56,7 +56,7 @@ export default async function AuthButton() {
     );
   }
   return user ? (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-4 text-white">
       <DropdownMenu>
         <DropdownMenuTrigger className="border px-3 py-1 rounded-lg">{`${user.firstName} ${user.lastName}`}</DropdownMenuTrigger>
         <DropdownMenuContent>

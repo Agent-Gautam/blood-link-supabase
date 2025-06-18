@@ -43,27 +43,22 @@ export default function RootLayout({
         >
           <main className="min-h-screen flex flex-col">
             {/* Navigation Bar */}
-            <nav className="sticky top-0 z-50 w-full bg-gradient-to-br from-[#ef4444]/80 to-[#f43f5e]/80 backdrop-blur-md h-16 shadow-lg transition-all duration-300">
+            <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#590202] via-[#8C0410] to-[#D91A2A] backdrop-blur-md h-16 shadow-lg transition-all duration-300">
               <div className="flex items-center justify-between px-4 sm:px-8 h-full">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2 group focus:outline-none">
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 group focus:outline-none"
+                >
                   <DropletIcon className="h-8 w-8 text-white drop-shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:glow-animate" />
                   <span className="text-2xl font-extrabold text-white tracking-tight group-hover:glow-animate transition">
                     BloodLink
                   </span>
                 </Link>
                 {/* Right Side Buttons */}
-                <div className="flex items-center gap-4">
-                  <Link href="/sign-in">
-                    <button className="px-4 py-2 rounded-lg bg-white text-[#ef4444] font-semibold shadow hover:shadow-lg hover:ring-2 hover:ring-[#ef4444]/40 focus:outline-none focus:ring-2 focus:ring-[#ef4444]/60 transition-all duration-200 glow-hover">
-                      Sign in
-                    </button>
-                  </Link>
-                  <Link href="/sign-up">
-                    <button className="px-4 py-2 rounded-lg bg-gradient-to-br from-[#ef4444] to-[#f43f5e] text-white font-semibold shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white/70 transition-all duration-200 glow-hover">
-                      Create Account
-                    </button>
-                  </Link>
+                <div className="flex gap-3">
+                  <HeaderAuth />
+                  <ThemeSwitcher />
                 </div>
               </div>
               <style>{`
@@ -78,25 +73,49 @@ export default function RootLayout({
             </nav>
 
             {/* Main Content */}
-            <div className="flex-1 w-full flex flex-col gap-12">
-              {children}
-            </div>
+            <div className="flex-1 w-full flex flex-col gap-12">{children}</div>
 
             {/* Footer */}
-            <footer aria-label="Footer" className="w-full bg-gradient-to-r from-blue-50 via-white to-red-50 border-t border-foreground/10 py-10 px-4 sm:px-6 lg:px-8 mt-8">
+            <footer
+              aria-label="Footer"
+              className="w-full bg-gradient-to-r from-blue-50 via-white to-red-50 border-t border-foreground/10 py-10 px-4 sm:px-6 lg:px-8 mt-8 z-50"
+            >
               <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
                 <div>
                   <p className="text-base text-gray-700 font-semibold">
-                    &copy; {new Date().getFullYear()} BloodLink. All rights reserved.
+                    &copy; {new Date().getFullYear()} BloodLink. All rights
+                    reserved.
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    Made with <span aria-label="love" role="img">❤️</span> for a healthier world.
+                    Made with{" "}
+                    <span aria-label="love" role="img">
+                      ❤️
+                    </span>{" "}
+                    for a healthier world.
                   </p>
                 </div>
-                <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-4 justify-center md:justify-end">
-                  <Link href="/about" className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium">About</Link>
-                  <Link href="/contact" className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium">Contact</Link>
-                  <Link href="/privacy" className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium">Privacy Policy</Link>
+                <nav
+                  aria-label="Footer navigation"
+                  className="flex flex-wrap items-center gap-4 justify-center md:justify-end"
+                >
+                  <Link
+                    href="/about"
+                    className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium"
+                  >
+                    About
+                  </Link>
+                  <Link
+                    href="/contact"
+                    className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium"
+                  >
+                    Contact
+                  </Link>
+                  <Link
+                    href="/privacy"
+                    className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium"
+                  >
+                    Privacy Policy
+                  </Link>
                 </nav>
               </div>
             </footer>
