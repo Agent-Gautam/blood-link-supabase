@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState } from "react";
 import {
   Select,
@@ -19,18 +21,95 @@ import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
 import { RegisterOrganisation } from "./actions";
 import { FormMessage, Message } from "@/components/form-message";
+import { Coordinates } from "@/archives/v0-map/map-container";
+import { Location } from "@/lib/types";
+import GeoLocation from "@/components/location/geo-location-access";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import dynamic from "next/dynamic";
+import { toast } from "sonner";
+import { redirect } from "next/navigation";
+const MapWithSearch = dynamic(
+  () => import("@/components/location/map-with-search"),
+  {
+    ssr: false,
+  }
+);
 
-export default async function OrganisationRegistration(props: {
+export default function OrganisationRegistration(props: {
   searchParams: Promise<Message>;
 }) {
-  const searchParams = await props.searchParams;
-  if ("message" in searchParams) {
-    return (
-      <div className="w-full flex-1 flex items-center h-screen sm:max-w-md justify-center gap-2 p-4">
-        <FormMessage message={searchParams} />
-      </div>
-    );
-  }
+  const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
+  const [location, setLocation] = useState<Location>();
+
+  const handleLocationChange = (
+    newLocation: Location,
+    newCoordinates: Coordinates
+  ) => {
+    if (newCoordinates.lat && newCoordinates.lng && newLocation.address) {
+      setLocation(newLocation);
+      setCoordinates(newCoordinates);
+    }
+  };
+
+  const handleSubmit = async (formData: FormData) => {
+
+    // Validate required fields
+    const orgType = formData.get("orgType")?.toString();
+    const name = formData.get("name")?.toString();
+    const contactNumber = formData.get("contact_number")?.toString();
+    const uniqueId = formData.get("unique_id")?.toString();
+
+    // Validate location data
+    if (
+      !location ||
+      !location.state ||
+      !location.city ||
+      !location.country ||
+      !coordinates
+    ) {
+      toast.error("Please select a valid location from the map");
+      return;
+    }
+
+    // Validate other required fields
+    if (!orgType) {
+      toast.error("Please select an organisation type");
+      return;
+    }
+    if (!name || name.trim().length < 3) {
+      toast.error(
+        "Please enter a valid organisation name (minimum 3 characters)"
+      );
+      return;
+    }
+    if (!contactNumber || !/^\+?\d{10,15}$/.test(contactNumber)) {
+      toast.error("Please enter a valid contact number (10-15 digits)");
+      return;
+    }
+    if (!uniqueId || uniqueId.trim().length < 3) {
+      toast.error("Please enter a valid unique ID (minimum 3 characters)");
+      return;
+    }
+
+    // Append location data to formData
+    formData.set("address", location.address);
+    formData.set("city", location.city);
+    formData.set("state", location.state);
+    formData.set("country", location.country);
+    formData.set("postalCode", location.postalCode || "");
+    formData.set("lat", coordinates.lat.toString());
+    formData.set("lng", coordinates.lng.toString());
+
+    toast.loading("Registering...");
+    const result = await RegisterOrganisation(formData);
+    toast.dismiss();
+    if (!result.success) {
+      toast.error(`Registration failed: ${result.error}`);
+      return;
+    }
+        toast.success(result.message || "Successfully registered as a donor");
+        redirect("/organisation");
+  };
 
   return (
     <div className="container mx-auto py-10 px-4">
@@ -39,10 +118,10 @@ export default async function OrganisationRegistration(props: {
           <CardHeader>
             <CardTitle>Organisation Registration</CardTitle>
             <CardDescription>
-              Please provide your your information.
+              Please provide your organisation information.
             </CardDescription>
           </CardHeader>
-          <form>
+          <form action={handleSubmit}>
             <CardContent className="space-y-6">
               {/* organisation type */}
               <div className="space-y-2">
@@ -100,57 +179,68 @@ export default async function OrganisationRegistration(props: {
                   required
                 />
               </div>
-              {/* address */}
-              <div className="space-y-2">
-                <label htmlFor="address" className="text-sm font-medium">
-                  Address
-                </label>
-                <Input
-                  type="text"
-                  name="address"
-                  id="address"
-                  placeholder="Enter your organisation address"
-                  required
-                />
-              </div>
-              {/* city */}
-              <div className="space-y-2">
-                <label htmlFor="city" className="text-sm font-medium">
-                  City
-                </label>
-                <Input
-                  type="text"
-                  name="city"
-                  id="city"
-                  placeholder="Enter your organisation city"
-                  required
-                />
-              </div>
-              {/* state */}
-              <div className="space-y-2">
-                <label htmlFor="state" className="text-sm font-medium">
-                  State
-                </label>
-                <Input
-                  type="text"
-                  name="state"
-                  id="state"
-                  placeholder="Enter your organisation state"
-                  required
-                />
-              </div>
-              {/* country */}
-              <div className="space-y-2">
-                <label htmlFor="country" className="text-sm font-medium">
-                  Country
-                </label>
-                <Input
-                  type="text"
-                  name="country"
-                  id="country"
-                  placeholder="Enter your organisation country"
-                  required
-                />
+              {/* location */}
+              <div className="space-y-2 flex flex-col gap-2">
+                <label className="text-sm font-medium">Location*</label>
+                {location?.address && (
+                  <Card className="bg-gray-50 border border-gray-200 shadow-none">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base font-semibold">
+                        Selected Location
+                      </CardTitle>
+                      <CardDescription className="text-xs">
+                        Please verify your location details below.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="py-2">
+                      <div className="space-y-1 text-sm">
+                        <div>
+                          <span className="font-medium">Address:</span>{" "}
+                          <span>{location.address || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">City:</span>{" "}
+                          <span>{location.city || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">State:</span>{" "}
+                          <span>{location.state || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Pincode:</span>{" "}
+                          <span>{location.postalCode || "—"}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Country:</span>{" "}
+                          <span>{location.country || "—"}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+                <GeoLocation onLocationSet={handleLocationChange} />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button
+                      type="button"
+                      className="mt-2 bg-blue-600 text-white"
+                    >
+                      Select Location on Map
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl w-full h-[80vh] p-0">
+                    <DialogHeader className="bg-red-300 sr-only">
+                      <DialogTitle>Select Location</DialogTitle>
+                      <DialogDescription>
+                        Search for a location or click on the map to select.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <MapWithSearch
+                      initialCoordinates={coordinates}
+                      handleLocationChange={handleLocationChange}
+                    />
+                  </DialogContent>
+                </Dialog>
               </div>
               {/* do you want to keep inventory checkbox */}
               <div className="flex items-center space-x-2">
@@ -167,12 +257,10 @@ export default async function OrganisationRegistration(props: {
             </CardContent>
             <CardFooter>
               <SubmitButton
-                formAction={RegisterOrganisation}
                 pendingText="Registering..."
               >
                 Register
               </SubmitButton>
-              <FormMessage message={searchParams} />
             </CardFooter>
           </form>
         </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -18,6 +18,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { RegisterDonor } from "../register/actions";
 import { toast } from "sonner";
+import GeoLocationAccess from "@/archives/map/geo-location-access";
+import { getUser } from "@/utils/supabase/server";
+import { Coordinates, MarkerData } from "@/lib/types";
+import MapMarkers from "@/components/location/map-markers";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { createClient } from "@/utils/supabase/client";
 
 const sortOptions = [
   { label: "Start Date (Asc)", value: "start_date-asc" },
@@ -33,6 +40,7 @@ export default function DonationCampsPage() {
   const [camps, setCamps] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [campRegistrations, setCampRegistrations] = useState<string[]>([]);
+  const [userLocation, setUserLocation] = useState<Coordinates | null>(null);
 
   const getSortObj = () => {
     const [column, order] = sort.split("-");
@@ -46,6 +54,27 @@ export default function DonationCampsPage() {
 
   useEffect(() => {
     fetchRegistrations();
+    const fetchUserAndRegistrations = async () => {
+      const user = await getUser();
+
+      // Fetch donor's longitude and latitude from donors table
+      if (user && user.id) {
+        console.log("hello");
+        const supabase = createClient();
+
+        const { data, error } = await supabase
+          .from("donors")
+          .select("longitude, latitude")
+          .eq("user_id", user.id)
+          .single();
+        console.log("User location data: ", data, error);
+        if (!error && data) {
+          setUserLocation({ lng: data.longitude, lat: data.latitude });
+        }
+      }
+    };
+
+    fetchUserAndRegistrations();
   }, []);
 
   const fetchCamps = async () => {
@@ -81,6 +110,28 @@ export default function DonationCampsPage() {
     fetchRegistrations();
   }
 
+  // Create geoData from camps
+  const geoData = {
+    type: "FeatureCollection",
+    features: camps
+      .filter((camp) => camp.latitude && camp.longitude)
+      .map((camp) => ({
+        type: "Feature",
+        properties: {
+          htmlPopup: `
+              <div style="padding: 8px 12px; min-width:180px;">
+                <div style="font-weight:600; font-size:1rem; color:#d90429; margin-bottom:2px;">${camp.name}</div>
+                <div style="font-size:0.95rem; color:#222;">Organised by: <span style='font-weight:500;'>${camp.organization?.name || "N/A"}</span></div>
+              </div>
+            `,
+        },
+        geometry: {
+          type: "Point",
+          coordinates: [camp.latitude, camp.longitude] as [number, number],
+        },
+      })),
+  };
+
   return (
     <div className="container mx-auto py-8 px-4">
       <h1 className="text-3xl font-bold mb-6">Donation Camps</h1>
@@ -115,12 +166,42 @@ export default function DonationCampsPage() {
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {camps.length === 0 && !loading && <div>No camps found.</div>}
+        {userLocation && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Card className="w-full max-w-md mx-auto mb-4 cursor-pointer hover:shadow-lg transition-shadow relative overflow-hidden">
+                {/* Background image */}
+                <img
+                  src="/map-image.png"
+                  alt="Map background"
+                  className="absolute inset-0 w-full h-full object-cover opacity-40 z-0"
+                />
+                <div className="relative z-10">
+                  <CardHeader>
+                    <CardTitle className="text-xl font-bold line-clamp-1">
+                      View All Camps on Map
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-muted-foreground">
+                      Click to view all donation camps on the map
+                    </div>
+                  </CardContent>
+                </div>
+              </Card>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl w-full h-[80vh] p-0 flex items-center justify-center">
+              <MapMarkers userCoordinates={userLocation} geoData={geoData} />
+            </DialogContent>
+          </Dialog>
+        )}
         {camps.map((camp) => (
           <CampCard
             key={camp.id}
             camp={camp}
             register={registerDonorForCamp}
             isRegistered={campRegistrations.includes(camp.id)}
+            caller="/donor/donation-camps"
           />
         ))}
       </div>

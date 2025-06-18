@@ -8,7 +8,8 @@ import {
   CardDescription,
   CardFooter,
 } from "@/components/ui/card";
-import { CalendarIcon, MapPinIcon } from "lucide-react";
+import { CalendarIcon, MapPinIcon, ExternalLink } from "lucide-react";
+import Link from "next/link";
 
 interface CampCardProps {
   camp: {
@@ -17,23 +18,39 @@ interface CampCardProps {
     location: string;
     start_date: string;
     end_date: string;
-    organisations?: { name: string } | null;
+    organisation_name: string;
   };
   register: (id: string) => void;
   isRegistered: boolean;
+  caller?: string;
 }
 
-export default function CampCard({ camp, register, isRegistered }: CampCardProps) {
+export default function CampCard({
+  camp,
+  register,
+  isRegistered,
+  caller,
+}: CampCardProps) {
   return (
-    <Card className="w-full max-w-md mx-auto mb-4">
+    <Card className="w-full max-w-md mx-auto mb-4 relative">
+      <div className="absolute top-4 right-4">
+        <Link
+          href={`/info/camp/${camp.id}?backTo=${caller}`}
+          rel="noopener noreferrer"
+        >
+          <Button variant="outline" size="icon">
+            <ExternalLink className="w-4 h-4" />
+          </Button>
+        </Link>
+      </div>
       <CardHeader>
         <CardTitle className="text-xl font-bold line-clamp-1">
           {camp.name}
         </CardTitle>
         <CardDescription>
-          {camp.organisations?.name && (
+          {camp.organisation_name && (
             <span className="font-medium">
-              Organised by: {camp.organisations.name}
+              Organised by: {camp.organisation_name}
             </span>
           )}
         </CardDescription>

@@ -1,1 +1,3 @@
-//capcaity of each blood type currently - 200
+export default function OrganisationSettingsPage() {
+  return <div>OrganisationSettingsPage</div>;
+}

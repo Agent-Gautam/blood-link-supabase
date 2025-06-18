@@ -20,14 +20,15 @@ export async function CreateCampAction(formData: FormData) {
   const startdate = formData.get("start_date")?.toString();
   const endDate = formData.get("end_date")?.toString();
   const bloodBankId = formData.get("blood_bank_id")?.toString();
+  const id = formData.get("id")?.toString();
   console.log(formData);
 
   const { error } = await supabase.from("donation_camps").upsert({
+    id: id,
     organisation_id: user.organisation_id,
     name: name,
     location: location,
-    latitude: latitude,
-    longitude: longitude,
+    geo_points: `POINT(${longitude} ${latitude})`,
     start_date: startdate,
     end_date: endDate,
     blood_bank_id: bloodBankId,

@@ -3,15 +3,21 @@ import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import Link from "next/link";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { createClient } from "@/utils/supabase/server";
+import { createClient, getUser } from "@/utils/supabase/server";
 import { SubmitButton } from "./submit-button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default async function AuthButton() {
   const supabase = await createClient();
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const user = await getUser();
 
   if (!hasEnvVars) {
     return (
@@ -51,12 +57,28 @@ export default async function AuthButton() {
   }
   return user ? (
     <div className="flex items-center gap-4">
-      Hey, {user.email}!
-      <form action={signOutAction}>
-        <SubmitButton type="submit" variant={"outline"} pendingText="Signing Out..." >
-          Sign out
-        </SubmitButton>
-      </form>
+      <DropdownMenu>
+        <DropdownMenuTrigger className="border px-3 py-1 rounded-lg">{`${user.firstName} ${user.lastName}`}</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem asChild>
+            <Link href={`/${user.role.toLowerCase()}`}>Dashboard</Link>
+          </DropdownMenuItem>
+          {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
+          {/* <DropdownMenuSeparator /> */}
+          <DropdownMenuItem>
+            <form action={signOutAction}>
+              <SubmitButton
+                type="submit"
+                variant={"ghost"}
+                pendingText="Signing Out..."
+                className="p-0"
+              >
+                Sign Out
+              </SubmitButton>
+            </form>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   ) : (
     <div className="flex gap-2">
@@ -64,7 +86,7 @@ export default async function AuthButton() {
         <Link href="/sign-in">Sign in</Link>
       </Button>
       <Button asChild size="sm" variant={"default"}>
-        <Link href="/sign-up">Sign up</Link>
+        <Link href="/sign-up">Create Account</Link>
       </Button>
     </div>
   );

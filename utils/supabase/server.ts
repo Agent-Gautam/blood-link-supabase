@@ -1,3 +1,5 @@
+"use server";
+
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
@@ -30,12 +32,12 @@ export const createClient = async () => {
 
 export const getUser = async () => {
   const supabase = await createClient();
-  const {data} = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
   if (!data.user) {
     return null;
   }
   const userId = data.user.id;
-  const {data: userInfo} = await (await supabase)
+  const { data: userInfo } = await (await supabase)
     .from("users")
     .select("*, organisations(id), donors(id)")
     .eq("id", userId)
@@ -49,6 +51,6 @@ export const getUser = async () => {
     role: userInfo.role,
     organisation_id: userInfo.organisations?.id,
     donor_id: userInfo.donors?.id,
-  }
+  };
   return userData;
 };

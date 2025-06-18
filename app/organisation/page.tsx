@@ -179,7 +179,6 @@ export default async function OrganisationDashboard() {
             <BloodRequests org_id={orgData.id} />
           </div>
         </Card>
-
         {/* Inventory Overview */}
         <Card className="shadow-xl border border-red-100 bg-white/95 backdrop-blur-sm transition-all duration-300 hover:shadow-2xl">
           <CardHeader className="p-6">

@@ -8,7 +8,7 @@ import CampTabs from "../../components/camp-tabs";
 export default async function CampDashboard({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{id:string}>;
 }) {
   const parameters = await params;
   const campId = parameters.id;

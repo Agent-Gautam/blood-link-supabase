@@ -56,7 +56,8 @@ export async function fetchRequestHistory(limit?: number) {
   const query = supabase
     .from("blood_requests")
     .select("*, organisations(name)")
-    .eq("donor_id", user.donor_id);
+    .eq("donor_id", user.donor_id)
+    .order("request_date", { ascending: false });
 
   if (limit) {
     query.limit(limit);

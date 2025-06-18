@@ -8,16 +8,7 @@ export async function fetchDonationCamps(
 ) {
   const supabase = await createClient();
 
-  let query = supabase.from("donation_camps").select(
-    `
-            id,
-            name,
-            location,
-            start_date,
-            end_date,
-            organisations!donation_camps_organisation_id_fkey (name)
-        `
-  );
+  let query = supabase.from("donation_camps_with_details").select("*");
 
   // Apply filters
   for (const [key, value] of Object.entries(filters)) {

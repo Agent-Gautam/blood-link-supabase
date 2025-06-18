@@ -59,9 +59,9 @@ export default async function Signup(props: {
             />
             <h1>Organisation</h1>
           </Label>
-          <Label htmlFor="firstname">Name</Label>
+          <Label htmlFor="firstname">User first Name</Label>
           <Input name="firstname" placeholder="Your First name" required />
-          <Label htmlFor="lastname">Last name</Label>
+          <Label htmlFor="lastname">User Last name</Label>
           <Input name="lastname" placeholder="Your Last name" required />
           <Label htmlFor="phone">Phone</Label>
           <Input name="phone" placeholder="Your phone number" required />
