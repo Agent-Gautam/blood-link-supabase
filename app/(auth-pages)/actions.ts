@@ -78,6 +78,9 @@ export const signInAction = async (formData: FormData) => {
     email,
     password,
   });
+  if (error) {
+    return encodedRedirect("error", "/sign-in", error.message);
+  }
   const { data: roleData, error: roleError } = await supabase
     .from("users")
     .select("role")
@@ -89,9 +92,7 @@ export const signInAction = async (formData: FormData) => {
   }
   const userRole = (roleData?.role as string)?.toLowerCase();
   console.log(userRole);
-  if (error) {
-    return encodedRedirect("error", "/sign-in", error.message);
-  }
+
 
   return redirect(`/${userRole}`);
 };
