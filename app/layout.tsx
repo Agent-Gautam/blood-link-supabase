@@ -64,33 +64,21 @@ export default function RootLayout({
             </div>
 
             {/* Footer */}
-            <footer className="w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-foreground/10 py-12 px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Made with ❤️ by{" "}
-                  <a
-                    href="#"
-                    className="font-semibold text-bloodlink-red hover:underline transition-colors duration-200"
-                    rel="noreferrer"
-                  >
-                    BloodLink
-                  </a>
-                </p>
-                <div className="flex items-center gap-4">
-                  <Link
-                    href="/about"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-bloodlink-red transition-colors duration-200"
-                  >
-                    About
-                  </Link>
-                  <Link
-                    href="/contact"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-bloodlink-red transition-colors duration-200"
-                  >
-                    Contact
-                  </Link>
-                  <ThemeSwitcher />
+            <footer aria-label="Footer" className="w-full bg-gradient-to-r from-blue-50 via-white to-red-50 border-t border-foreground/10 py-10 px-4 sm:px-6 lg:px-8 mt-8">
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                <div>
+                  <p className="text-base text-gray-700 font-semibold">
+                    &copy; {new Date().getFullYear()} BloodLink. All rights reserved.
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Made with <span aria-label="love" role="img">❤️</span> for a healthier world.
+                  </p>
                 </div>
+                <nav aria-label="Footer navigation" className="flex flex-wrap items-center gap-4 justify-center md:justify-end">
+                  <Link href="/about" className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium">About</Link>
+                  <Link href="/contact" className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium">Contact</Link>
+                  <Link href="/privacy" className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium">Privacy Policy</Link>
+                </nav>
               </div>
             </footer>
 
