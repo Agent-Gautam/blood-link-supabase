@@ -72,8 +72,7 @@ export default function CampForm({
   };
 
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (formData: FormData) => {
     if (!selectedBloodBank && !inventoryOn) {
       toast.error("Please select a blood bank");
       return;
@@ -94,8 +93,6 @@ export default function CampForm({
     if (file) {
       const fileRes = await uploadEntityImage("camp", campId, file);
     }
-    console.log(e.currentTarget);
-    const formData = new FormData(e.currentTarget);
     formData.set("id", campId);
     formData.set("latitude", coordinates.lat.toString());
     formData.set("longitude", coordinates.lng.toString());
