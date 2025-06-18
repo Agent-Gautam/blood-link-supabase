@@ -43,19 +43,38 @@ export default function RootLayout({
         >
           <main className="min-h-screen flex flex-col">
             {/* Navigation Bar */}
-            <nav className="sticky top-0 z-50 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-foreground/10 h-16 transition-all duration-300">
-              <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-full">
-                <Link href="/" className="flex items-center space-x-2 group">
-                  <DropletIcon className="h-8 w-8 text-bloodlink-red transition-transform duration-200 group-hover:scale-110" />
-                  <span className="text-xl font-extrabold text-bloodlink-gray">
-                    Blood<span className="text-bloodlink-red">Link</span>
+            <nav className="sticky top-0 z-50 w-full bg-gradient-to-br from-[#ef4444]/80 to-[#f43f5e]/80 backdrop-blur-md h-16 shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between px-4 sm:px-8 h-full">
+                {/* Logo */}
+                <Link href="/" className="flex items-center gap-2 group focus:outline-none">
+                  <DropletIcon className="h-8 w-8 text-white drop-shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:glow-animate" />
+                  <span className="text-2xl font-extrabold text-white tracking-tight group-hover:glow-animate transition">
+                    BloodLink
                   </span>
                 </Link>
-                <div className="flex items-center space-x-4">
-                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
-                  <ThemeSwitcher />
+                {/* Right Side Buttons */}
+                <div className="flex items-center gap-4">
+                  <Link href="/sign-in">
+                    <button className="px-4 py-2 rounded-lg bg-white text-[#ef4444] font-semibold shadow hover:shadow-lg hover:ring-2 hover:ring-[#ef4444]/40 focus:outline-none focus:ring-2 focus:ring-[#ef4444]/60 transition-all duration-200 glow-hover">
+                      Sign in
+                    </button>
+                  </Link>
+                  <Link href="/sign-up">
+                    <button className="px-4 py-2 rounded-lg bg-gradient-to-br from-[#ef4444] to-[#f43f5e] text-white font-semibold shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-white/70 transition-all duration-200 glow-hover">
+                      Create Account
+                    </button>
+                  </Link>
                 </div>
               </div>
+              <style>{`
+                .glow-hover:hover, .group:hover .glow-animate {
+                  box-shadow: 0 0 8px 2px #f43f5e, 0 0 16px 4px #ef4444;
+                  filter: drop-shadow(0 0 8px #f43f5e);
+                }
+                .glow-animate {
+                  transition: box-shadow 0.3s, filter 0.3s;
+                }
+              `}</style>
             </nav>
 
             {/* Main Content */}
