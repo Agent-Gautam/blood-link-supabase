@@ -3,10 +3,11 @@ import type { Config } from "tailwindcss";
 const config = {
   darkMode: ["class"],
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
-    "./app/**/*.{ts,tsx}",
-    "./src/**/*.{ts,tsx}",
+    "./app/**/*.{ts,tsx}", // App Router files
+    "./components/**/*.{ts,tsx}", // Shared components
+    "./donor/**/*.{ts,tsx}", // Donor pages
+    "./organisation/**/*.{ts,tsx}", // Org pages
+    "./(auth-pages)/**/*.{ts,tsx}", // Your custom folder
   ],
   prefix: "",
   theme: {
