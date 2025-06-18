@@ -52,6 +52,7 @@ export default async function CampDetails({
   const searchParams = await params;
   const campId = searchParams.id;
   const res = await fetchCampDetails(campId);
+
   if (!res.success) {
     return (
       <div className="max-w-4xl mx-auto p-6">
@@ -116,10 +117,6 @@ export default async function CampDetails({
               {/* <Badge className={getStatusColor(camp.status)}>
                 {camp.status.charAt(0).toUpperCase() + camp.status.slice(1)}
               </Badge> */}
-              <Button variant="secondary" size="sm">
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
             </div>
           </div>
         </CardContent>

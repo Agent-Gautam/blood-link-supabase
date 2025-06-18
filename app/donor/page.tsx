@@ -12,9 +12,11 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { fetchRequestHistory } from "./request/actions";
 import { DonorRequestTable } from "./components/request-table";
+import fetchDonations from "./donation-history/actions";
 export default async function DonorDashboard() {
   const supabase = await createClient();
   const user = await getUser();
+  
   if (!user) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -23,12 +25,13 @@ export default async function DonorDashboard() {
     );
   }
   const userName = user.firstName + " " + user.lastName;
-  const { data } = await supabase
+  const { data, error: userDetailError } = await supabase
     .from("donors")
     .select("*")
     .eq("user_id", user.id)
     .single();
   if (!data) {
+    console.log("Error getting user details : ", userDetailError);
     return (
       <div className="container mx-auto px-4 py-8">
         <Card>
@@ -47,21 +50,13 @@ export default async function DonorDashboard() {
       </div>
     );
   }
-  const { data: donationData, error } = await supabase
-    .from("donations")
-    .select(
-      `
-      id,
-    units_donated,
-    donation_date,
-    status,
-    organisations!donations_organisation_id_fkey (name),
-    donation_camps!fk_donations_camp(location)
-  `
-    )
-    .eq("donor_id", data.id);
-  if (error) {
-    console.error("Error fetching donation details:", error);
+  const donationres = await fetchDonations(data.id, { limit: 5 });
+  const donationData = donationres?.data;
+  if (donationData && Array.isArray(donationData)) {
+    donationData.forEach((donation: any) => {
+      delete donation.donation_camp_id;
+      delete donation.organisation_id;
+    });
   }
   const requestsResult = await fetchRequestHistory(5);
   const requestsData = requestsResult?.data;
@@ -83,6 +78,11 @@ export default async function DonorDashboard() {
         <h2 className="text-2xl font-bold text-gray-800 mb-6">
           Recent Blood Donation Requests
         </h2>
+        <div className="mb-4">
+          <Link href="/donor/request/history">
+            <Button variant="outline">View All Requests</Button>
+          </Link>
+        </div>
         <DonorRequestTable requests={requestsData ? requestsData : []} />
       </div>
       <DonationHistory donationData={donationData} />

@@ -82,10 +82,6 @@ export default async function DonorDetails({ params }: { params: { id: string } 
                     </Badge>
                   </div>
                 </div>
-                <Button variant="outline">
-                  <Edit className="w-4 h-4 mr-2" />
-                  Edit Profile
-                </Button>
               </div>
             </div>
           </div>

@@ -56,14 +56,6 @@ export default async function OrganizationDetailsPage({ params }: { params: { id
               <h1 className="text-3xl font-bold">{organization.name}</h1>
               <p className="text-blue-100">{organization.type}</p>
             </div>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="absolute top-4 right-4"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
           </div>
         </CardContent>
       </Card>

@@ -50,7 +50,11 @@ export const updateSession = async (request: NextRequest) => {
     ) {
       return NextResponse.redirect(new URL("/sign-in", request.url));
     }
-
+    // if (pathname.startsWith("/") && !user.error) {
+    //   return NextResponse.redirect(
+    //     new URL(`/${userRole.toLowerCase()}`, request.url)
+    //   );
+    // }
     // if (pathname === "/" && !user.error) {
     //   return NextResponse.redirect(new URL("/protected", request.url));
     // }

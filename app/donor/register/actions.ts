@@ -32,7 +32,8 @@ export async function RegisterDonor(formdata: FormData) {
         state: state,
         country: country,
         postcode: postcode,
-        location: `POINT(${longitude} ${latitude})`
+        longitude: longitude,
+        latitude: latitude,
     });
     if (error) {
         console.error(error.message);

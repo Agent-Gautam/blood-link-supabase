@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Select,
   SelectContent,
@@ -35,6 +35,10 @@ import { Coordinates, Location } from "@/lib/types";
 // import MapWithSearch from "@/components/location/map-with-search";
 // import OriginalMap from "@/components/location/original-code";
 import dynamic from "next/dynamic";
+import { getUser } from "@/utils/supabase/server";
+import { uploadEntityImage } from "@/app/actions/bucket-actions/store";
+import React from "react";
+import FileUpload from "@/components/file-upload";
 const MapComponent = dynamic(
   () => import("@/components/location/map-with-search"),
   {
@@ -46,6 +50,16 @@ export default function DonorRegistration() {
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
   const [location, setLocation] = useState<Location>();
   const [showMap, setShowMap] = useState(false);
+    const [file, setFile] = useState<File | null>(null);
+  const [user, setUser] = useState();
+
+    useEffect(() => {
+      async function fetchUser() {
+        const user = await getUser();
+        setUser(user);
+      }
+      fetchUser();
+    },[])
 
   const handleSubmit = async (formData: FormData) => {
     // Client-side validation
@@ -75,6 +89,12 @@ export default function DonorRegistration() {
     ) {
       toast.error("Please select a valid location from the map");
       return;
+    }
+
+        // uploading image to supabase storage
+    if (file) {
+      const fileRes = await uploadEntityImage(
+        "donor",user?.id,file )
     }
 
     // Append location fields to FormData
@@ -121,6 +141,12 @@ export default function DonorRegistration() {
           </CardHeader>
           <form action={handleSubmit}>
             <CardContent className="space-y-6">
+              <FileUpload
+                label="Your organisation Photo"
+                accept="images/*"
+                setFiles={setFile}
+                files={file}
+              />
               {/* Blood Type */}
               <div className="space-y-2">
                 <label htmlFor="bloodType" className="text-sm font-medium">
@@ -227,8 +253,10 @@ export default function DonorRegistration() {
                         Search for a location or click on the map to select.
                       </DialogDescription>
                     </DialogHeader>
-                    <MapComponent initialCoordinates={coordinates}
-  handleLocationChange={handleLocationChange} />
+                    <MapComponent
+                      initialCoordinates={coordinates}
+                      handleLocationChange={handleLocationChange}
+                    />
                   </DialogContent>
                 </Dialog>
               </div>

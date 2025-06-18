@@ -24,9 +24,9 @@ export default function Home() {
                     Become a Donor
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
+                {/* <Button size="lg" variant="outline" asChild>
                   <Link href="/requests">Find Blood Requests</Link>
-                </Button>
+                </Button> */}
               </div>
             </div>
             <div className="flex justify-center">
