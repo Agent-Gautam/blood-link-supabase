@@ -43,54 +43,80 @@ export default function RootLayout({
         >
           <main className="min-h-screen flex flex-col">
             {/* Navigation Bar */}
-            <nav className="sticky top-0 z-50 w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-b border-foreground/10 h-16 transition-all duration-300">
-              <div className="flex items-center justify-between px-4 sm:px-6 lg:px-8 h-full">
-                <Link href="/" className="flex items-center space-x-2 group">
-                  <DropletIcon className="h-8 w-8 text-bloodlink-red transition-transform duration-200 group-hover:scale-110" />
-                  <span className="text-xl font-extrabold text-bloodlink-gray">
-                    Blood<span className="text-bloodlink-red">Link</span>
+            <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#590202] via-[#8C0410] to-[#D91A2A] backdrop-blur-md h-16 shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between px-4 sm:px-8 h-full">
+                {/* Logo */}
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 group focus:outline-none"
+                >
+                  <DropletIcon className="h-8 w-8 text-white drop-shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:glow-animate" />
+                  <span className="text-2xl font-extrabold text-white tracking-tight group-hover:glow-animate transition">
+                    BloodLink
                   </span>
                 </Link>
-                <div className="flex items-center space-x-4">
-                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+                {/* Right Side Buttons */}
+                <div className="flex gap-3">
+                  <HeaderAuth />
                   <ThemeSwitcher />
                 </div>
               </div>
+              <style>{`
+                .glow-hover:hover, .group:hover .glow-animate {
+                  box-shadow: 0 0 8px 2px #f43f5e, 0 0 16px 4px #ef4444;
+                  filter: drop-shadow(0 0 8px #f43f5e);
+                }
+                .glow-animate {
+                  transition: box-shadow 0.3s, filter 0.3s;
+                }
+              `}</style>
             </nav>
 
             {/* Main Content */}
-            <div className="flex-1 w-full flex flex-col gap-12">
-              {children}
-            </div>
+            <div className="flex-1 w-full flex flex-col gap-12">{children}</div>
 
             {/* Footer */}
-            <footer className="w-full bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm border-t border-foreground/10 py-12 px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Made with ❤️ by{" "}
-                  <a
-                    href="#"
-                    className="font-semibold text-bloodlink-red hover:underline transition-colors duration-200"
-                    rel="noreferrer"
-                  >
-                    BloodLink
-                  </a>
-                </p>
-                <div className="flex items-center gap-4">
+            <footer
+              aria-label="Footer"
+              className="w-full bg-gradient-to-r from-blue-50 via-white to-red-50 border-t border-foreground/10 py-10 px-4 sm:px-6 lg:px-8 mt-8 z-50"
+            >
+              <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+                <div>
+                  <p className="text-base text-gray-700 font-semibold">
+                    &copy; {new Date().getFullYear()} BloodLink. All rights
+                    reserved.
+                  </p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Made with{" "}
+                    <span aria-label="love" role="img">
+                      ❤️
+                    </span>{" "}
+                    for a healthier world.
+                  </p>
+                </div>
+                <nav
+                  aria-label="Footer navigation"
+                  className="flex flex-wrap items-center gap-4 justify-center md:justify-end"
+                >
                   <Link
                     href="/about"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-bloodlink-red transition-colors duration-200"
+                    className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium"
                   >
                     About
                   </Link>
                   <Link
                     href="/contact"
-                    className="text-sm text-gray-600 dark:text-gray-400 hover:text-bloodlink-red transition-colors duration-200"
+                    className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium"
                   >
                     Contact
                   </Link>
-                  <ThemeSwitcher />
-                </div>
+                  <Link
+                    href="/privacy"
+                    className="text-sm text-gray-700 hover:text-red-600 transition-colors font-medium"
+                  >
+                    Privacy Policy
+                  </Link>
+                </nav>
               </div>
             </footer>
 

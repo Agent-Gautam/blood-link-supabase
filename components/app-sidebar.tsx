@@ -27,7 +27,7 @@ type AppSideBarProps = {
 export default function AppSideBar({ items }: AppSideBarProps) {
   const pathname = usePathname();
   return (
-    <Sidebar className="border-r border-border top-[63px]" collapsible="icon">
+    <Sidebar className="border-r border-border top-[63px] z-40" collapsible="icon">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="text-muted-foreground">
