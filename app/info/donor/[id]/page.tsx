@@ -16,6 +16,8 @@ import {
   UserCheck,
 } from "lucide-react";
 import { fetchDonorDetails } from "../../actions";
+import fetchImage from "@/app/actions/bucket-actions/fetch";
+import Image from "next/image";
 
 interface DonorDetails {
     id: string;
@@ -57,7 +59,7 @@ export default async function DonorDetails({ params }: { params: { id: string } 
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <Avatar className="w-24 h-24">
-              <AvatarImage src={donor.photoUrl || "/placeholder.svg"} />
+              <AvatarImage src={fetchImage("donor-photo", donorId) || "/placeholder.svg"} />
               <AvatarFallback className="text-2xl">
                 {donor.firstName[0]}
                 {donor.lastName[0]}

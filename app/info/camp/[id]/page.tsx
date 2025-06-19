@@ -103,7 +103,7 @@ export default async function CampDetails({
       hour12: true,
     });
   };
-
+  const campPhotoUrl = await fetchImage("camp-banner", campId);
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header Section */}
@@ -112,7 +112,7 @@ export default async function CampDetails({
           <div className="h-48 bg-gradient-to-r from-red-500 to-pink-600 rounded-t-lg relative">
             <div className="absolute inset-0 bg-black/20 rounded-t-lg" />
             <Image
-              src={fetchImage("camp-banner", campId)}
+              src={campPhotoUrl || '/camp-placeholder.webp'}
               alt="camp banner"
               width={500}
               height={200}
@@ -295,7 +295,7 @@ export default async function CampDetails({
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl w-full h-[80vh] p-0">
                     <DialogHeader className="bg-red-300 sr-only">
-                  <DialogTitle>Donation Camp Directions</DialogTitle>
+                      <DialogTitle>Donation Camp Directions</DialogTitle>
                       <DialogDescription>
                         Take directions to the donation camp
                       </DialogDescription>

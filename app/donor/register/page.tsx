@@ -142,7 +142,7 @@ export default function DonorRegistration() {
           <form action={handleSubmit}>
             <CardContent className="space-y-6">
               <FileUpload
-                label="Your organisation Photo"
+                label="Your profile Photo"
                 accept="images/*"
                 setFiles={setFile}
                 files={file}
