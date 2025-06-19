@@ -17,6 +17,8 @@ import { fetchCampDetails } from "../../actions";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import MapComponent from "@/components/location/map-component";
 import { createClient, getUser } from "@/utils/supabase/server";
+import Image from "next/image";
+import fetchImage from "@/app/actions/bucket-actions/fetch";
 
 interface CampDetails {
   id: string;
@@ -101,7 +103,7 @@ export default async function CampDetails({
       hour12: true,
     });
   };
-
+  const campPhotoUrl = await fetchImage("camp-banner", campId);
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header Section */}
@@ -109,6 +111,13 @@ export default async function CampDetails({
         <CardContent className="p-0">
           <div className="h-48 bg-gradient-to-r from-red-500 to-pink-600 rounded-t-lg relative">
             <div className="absolute inset-0 bg-black/20 rounded-t-lg" />
+            <Image
+              src={campPhotoUrl || '/camp-placeholder.webp'}
+              alt="camp banner"
+              width={500}
+              height={200}
+              className="size-full"
+            />
             <div className="absolute bottom-4 left-6 text-white">
               <h1 className="text-3xl font-bold">{camp.name}</h1>
               <p className="text-red-100">Blood Donation Camp</p>
@@ -286,7 +295,7 @@ export default async function CampDetails({
                   </DialogTrigger>
                   <DialogContent className="max-w-4xl w-full h-[80vh] p-0">
                     <DialogHeader className="bg-red-300 sr-only">
-                  <DialogTitle>Donation Camp Directions</DialogTitle>
+                      <DialogTitle>Donation Camp Directions</DialogTitle>
                       <DialogDescription>
                         Take directions to the donation camp
                       </DialogDescription>
