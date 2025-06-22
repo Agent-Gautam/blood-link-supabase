@@ -136,7 +136,7 @@ export async function fetchCampData(campId: string) {
       .eq("camp_id", campId),
     supabase
       .from("donations")
-      .select("id, blood_type, donation_date, units_donated, donor:donors(id, date_of_birth, gender, user:users(first_name, last_name) )")
+      .select("id, blood_type, donation_date, units_donated, donor:donors(id, date_of_birth,blood_type, gender, user:users(first_name, last_name) )")
       .eq("donation_camp_id", campId),
   ]);
   console.log(regError, donError);

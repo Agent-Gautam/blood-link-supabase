@@ -5,12 +5,13 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import {
-    Boxes,
+  Boxes,
   Circle,
   HeartPlus,
   History,
   Home,
   MessageSquareDiff,
+  Plus,
   Search,
   Tent,
 } from "lucide-react";
@@ -21,40 +22,42 @@ export default function DonorLayout({
 }: {
   children: React.ReactNode;
 }) {
-const sideBarItems = [
+  const sideBarItems = [
     {
-        title: "Home",
-        url: "/organisation",
-        icon: <Home className="h-5 w-5" />,
+      title: "Home",
+      url: "/organisation",
+      icon: <Home className="h-5 w-5" />,
     },
     {
-        title: "Camps",
-        url: "/organisation/camps",
-        icon: <Tent className="h-5 w-5" />,
+      title: "Camps",
+      url: "/organisation/camps",
+      icon: <Tent className="h-5 w-5" />,
     },
     {
-        title: "Requests",
-        url: "/organisation/requests",
-        icon: <HeartPlus className="h-5 w-5" />, // HeartPlus fits for donation/requests
+      title: "Create camp",
+      url: "/organisation/camps/update",
+      icon: <Plus className="h-5 w-5" />,
     },
     {
-        title: "Inventory",
-        url: "/organisation/inventory",
-        icon: <Boxes className="h-5 w-5" />, // Boxes is suitable for inventory
+      title: "Requests",
+      url: "/organisation/requests",
+      icon: <HeartPlus className="h-5 w-5" />, // HeartPlus fits for donation/requests
     },
-];
+    {
+      title: "Inventory",
+      url: "/organisation/inventory",
+      icon: <Boxes className="h-5 w-5" />, // Boxes is suitable for inventory
+    },
+  ];
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
         <AppSideBar items={sideBarItems} />
-
+      <div className="w-full flex min-h-screen p-5 relative">
+        {/* Sidebar */}
+        <SidebarTrigger className="absolute top-0 left-0" />
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-40 bg-background border-b border-border px-4 py-3 flex items-center">
-            <SidebarTrigger className="mr-2" />
-          </header>
           <main className="flex-1">{children}</main>
         </div>
       </div>

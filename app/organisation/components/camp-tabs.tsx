@@ -34,23 +34,6 @@ export default function CampTabs({
       <TabsContent value="overview">
         <div className="space-y-6">
           <BloodCollection donations={donations} />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <Card>
-              <CardContent className="pt-6">
-                {/* <BloodTypeChart donations={donations} /> */}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                {/* <CollectionTrendsChart donations={donations} /> */}
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                {/* <DonorDemographicsChart donors={donors} /> */}
-              </CardContent>
-            </Card>
-          </div>
         </div>
       </TabsContent>
       <TabsContent value="donors">

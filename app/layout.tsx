@@ -20,6 +20,9 @@ export const metadata = {
   title: "BloodLink - Connect & Save Lives",
   description:
     "A platform to connect blood donors and organizations, powered by Next.js and Supabase",
+  icons: {
+    icon: "/blood.png",
+  },
 };
 
 const geistSans = Geist({
@@ -42,26 +45,26 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <main className="min-h-screen flex flex-col">
-            {/* Navigation Bar */}
-            <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#590202] via-[#8C0410] to-[#D91A2A] backdrop-blur-md h-16 shadow-lg transition-all duration-300">
-              <div className="flex items-center justify-between px-4 sm:px-8 h-full">
-                {/* Logo */}
-                <Link
-                  href="/"
-                  className="flex items-center gap-2 group focus:outline-none"
-                >
-                  <DropletIcon className="h-8 w-8 text-white drop-shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:glow-animate" />
-                  <span className="text-2xl font-extrabold text-white tracking-tight group-hover:glow-animate transition">
-                    BloodLink
-                  </span>
-                </Link>
-                {/* Right Side Buttons */}
-                <div className="flex gap-3">
-                  <HeaderAuth />
-                  <ThemeSwitcher />
+              {/* Navigation Bar */}
+              <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#590202] via-[#8C0410] to-[#D91A2A] backdrop-blur-md h-16 shadow-lg transition-all duration-300">
+                <div className="flex items-center justify-between px-4 sm:px-8 h-full">
+                  {/* Logo */}
+                  <Link
+                    href="/"
+                    className="flex items-center gap-2 group focus:outline-none"
+                  >
+                    <DropletIcon className="h-8 w-8 text-white drop-shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:glow-animate" />
+                    <span className="text-2xl font-extrabold text-white tracking-tight group-hover:glow-animate transition">
+                      BloodLink
+                    </span>
+                  </Link>
+                  {/* Right Side Buttons */}
+                  <div className="flex gap-3">
+                    <HeaderAuth />
+                    <ThemeSwitcher />
+                  </div>
                 </div>
-              </div>
-              <style>{`
+                <style>{`
                 .glow-hover:hover, .group:hover .glow-animate {
                   box-shadow: 0 0 8px 2px #f43f5e, 0 0 16px 4px #ef4444;
                   filter: drop-shadow(0 0 8px #f43f5e);
