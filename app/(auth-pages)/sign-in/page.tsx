@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { FiMail, FiLock } from "react-icons/fi";
+import QuickSignInButtons from "../components/quick-signin-buttons";
 
 export default async function SignIn(props: {
   searchParams: Promise<Message>;
@@ -32,7 +33,7 @@ export default async function SignIn(props: {
         </div>
       </div>
       {/* Right Side: Login Form */}
-      <div className="w-1/2 min-h-full flex items-center justify-center bg-white">
+      <div className="w-1/2 min-h-full flex flex-row items-center justify-center bg-white">
         <form
           action={signInAction}
           className="w-full max-w-md mx-auto p-8 rounded-2xl border border-gray-200 bg-white shadow-md space-y-5"
@@ -115,6 +116,9 @@ export default async function SignIn(props: {
             </Link>
           </div>
         </form>
+        <div className="w-full max-w-md mx-auto px-8">
+          <QuickSignInButtons />
+        </div>
       </div>
     </div>
   );
