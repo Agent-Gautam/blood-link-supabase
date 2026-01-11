@@ -17,15 +17,15 @@ import {
   CheckIcon,
   ClockIcon,
   Loader,
+  HeartHandshake,
+  User,
 } from "lucide-react";
-import { BloodRequest } from "@/app/donor/components/request-table";
+import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
-import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { BloodRequest } from "../types";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,
@@ -37,22 +37,36 @@ import { formatDate } from "@/lib/utils";
 import fetchBloodRequests from "../requests/actions";
 import { toast } from "sonner";
 import { SupabaseClient } from "@supabase/supabase-js";
+import EmptyState from "@/components/empty-state";
+import BloodRequestsSkeleton from "./blood-requests-skeleton";
 export default function BloodRequests({ org_id }: { org_id: string }) {
   const supabase = createClient();
   const [requests, setRequests] = useState<BloodRequest[]>([]);
-  const [dataLoading, setDataLoading] = useState(false);
-  async function fetchRequests() {
-    console.log("function called org_id: ", org_id);
-    const requestResult = await fetchBloodRequests(org_id);
-    console.log("result: ",requestResult);
-    if (requestResult.error) {
-      console.error("Error fetching blood requests:", requestResult.error.message);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  const fetchRequests = useCallback(async () => {
+    setDataLoading(true);
+    try {
+      const requestResult = await fetchBloodRequests(org_id);
+      if (!requestResult.success || requestResult.error) {
+        console.error("Error fetching blood requests:", requestResult.error);
+        toast.error("Failed to fetch blood requests. Please try again.");
+        setRequests([]);
+        return;
+      }
+      setRequests(requestResult.data || []);
+    } catch (error: any) {
+      console.error("Error fetching blood requests:", error);
       toast.error("Failed to fetch blood requests. Please try again.");
-      return;
+      setRequests([]);
+    } finally {
+      setDataLoading(false);
     }
-    setRequests(requestResult.data || []);
-  }
-  useEffect(() => { fetchRequests(); }, [])
+  }, [org_id]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
   // function handleRequestChange(id: string, newStatus: "FULFILLED"|"ACKNOWLEDGED") {
   //   setRequests((prevRequests: BloodRequest[]) =>
   //     prevRequests.map((request) =>
@@ -61,12 +75,29 @@ export default function BloodRequests({ org_id }: { org_id: string }) {
   //   );
 
   // }
+
+  if (dataLoading) {
+    return <BloodRequestsSkeleton />;
+  }
+
+  if (requests.length === 0) {
+    return (
+      <EmptyState
+        title="No Blood Requests Yet"
+        description="You haven't received any blood requests yet. When requests come in, they'll appear here for you to manage and fulfill."
+        icon={HeartHandshake}
+        showAddButton={false}
+      />
+    );
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
       <Table>
         <TableCaption>Your blood donation request history</TableCaption>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[150px]">Requester</TableHead>
             <TableHead className="w-[100px]">Blood Type</TableHead>
             <TableHead>Units</TableHead>
             <TableHead>Request Date</TableHead>
@@ -75,25 +106,14 @@ export default function BloodRequests({ org_id }: { org_id: string }) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {requests.length > 0 ? (
-            requests.map((request) => (
-              <TableRowComponent
-                key={request.id}
-                request={request}
-                fetchRequests={fetchRequests}
-                supabase={supabase}
-              />
-            ))
-          ) : (
-            <TableRow>
-              <TableCell
-                colSpan={6}
-                className="h-24 text-center text-muted-foreground"
-              >
-                No requests found.
-              </TableCell>
-            </TableRow>
-          )}
+          {requests.map((request) => (
+            <TableRowComponent
+              key={request.id}
+              request={request}
+              fetchRequests={fetchRequests}
+              supabase={supabase}
+            />
+          ))}
         </TableBody>
       </Table>
     </div>
@@ -161,7 +181,10 @@ const TableRowComponent = ({
 
     if (error) {
       toast.error(`Error updating request status: ${error.message}`);
+      setLoading(false);
+      return;
     }
+    toast.success(`Request marked as ${newStatus.toLowerCase()}`);
     setLoading(false);
     setDialogOpen(false);
     fetchRequests();
@@ -270,6 +293,17 @@ const TableRowComponent = ({
 
   return (
     <TableRow key={request.id} className="hover:bg-gray-50">
+      <TableCell>
+        <Link
+          href={`/info/donor/${request.donor_id}?backTo=/organisation/requests`}
+          className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+        >
+          <User className="h-4 w-4" />
+          <span className="font-medium">
+            {request.donor_name || "Unknown Donor"}
+          </span>
+        </Link>
+      </TableCell>
       <TableCell className="font-medium">
         <div className="flex items-center gap-2">
           <DropletIcon className="h-4 w-4 text-red-500" />

@@ -24,7 +24,14 @@ import { FormMessage, Message } from "@/components/form-message";
 import { Coordinates } from "@/archives/v0-map/map-container";
 import { Location } from "@/lib/types";
 import GeoLocation from "@/components/location/geo-location-access";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { redirect } from "next/navigation";
@@ -38,11 +45,21 @@ const MapWithSearch = dynamic(
   }
 );
 
+type LocationDetails = {
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
 export default function OrganisationRegistration(props: {
   searchParams: Promise<Message>;
 }) {
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
   const [location, setLocation] = useState<Location>();
+  const [locationDetails, setLocationDetails] =
+    useState<LocationDetails | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [user, setUser] = useState();
 
@@ -52,19 +69,22 @@ export default function OrganisationRegistration(props: {
       setUser(user);
     }
     fetchUser();
-  },[])
+  }, []);
   const handleLocationChange = (
     newLocation: Location,
-    newCoordinates: Coordinates
+    newCoordinates: Coordinates,
+    details?: LocationDetails
   ) => {
-    if (newCoordinates.lat && newCoordinates.lng && newLocation.address) {
+    if (newCoordinates.lat && newCoordinates.lng && newLocation) {
       setLocation(newLocation);
       setCoordinates(newCoordinates);
+      if (details) {
+        setLocationDetails(details);
+      }
     }
   };
 
   const handleSubmit = async (formData: FormData) => {
-
     // Validate required fields
     const orgType = formData.get("orgType")?.toString();
     const name = formData.get("name")?.toString();
@@ -74,9 +94,10 @@ export default function OrganisationRegistration(props: {
     // Validate location data
     if (
       !location ||
-      !location.state ||
-      !location.city ||
-      !location.country ||
+      !locationDetails ||
+      !locationDetails.state ||
+      !locationDetails.city ||
+      !locationDetails.country ||
       !coordinates
     ) {
       toast.error("Please select a valid location from the map");
@@ -104,16 +125,19 @@ export default function OrganisationRegistration(props: {
     }
     // uploading image to supabase storage
     if (file) {
-      const fileRes = await uploadEntityImage(
-        "organisation",user?.id,file )
+      const fileRes = await uploadEntityImage("organisation", user?.id, file);
     }
 
     // Append location data to formData
-    formData.set("address", location.address);
-    formData.set("city", location.city);
-    formData.set("state", location.state);
-    formData.set("country", location.country);
-    formData.set("postalCode", location.postalCode || "");
+    if (locationDetails) {
+      formData.set("address", locationDetails.address);
+      formData.set("city", locationDetails.city);
+      formData.set("state", locationDetails.state);
+      formData.set("country", locationDetails.country);
+      formData.set("postalCode", locationDetails.postalCode || "");
+    } else {
+      formData.set("address", location || "");
+    }
     formData.set("lat", coordinates.lat.toString());
     formData.set("lng", coordinates.lng.toString());
 
@@ -124,8 +148,8 @@ export default function OrganisationRegistration(props: {
       toast.error(`Registration failed: ${result.error}`);
       return;
     }
-        toast.success(result.message || "Successfully registered as a donor");
-        redirect("/organisation");
+    toast.success(result.message || "Successfully registered as a donor");
+    redirect("/organisation");
   };
 
   return (
@@ -140,7 +164,12 @@ export default function OrganisationRegistration(props: {
           </CardHeader>
           <form action={handleSubmit}>
             <CardContent className="space-y-6">
-              <FileUpload label="Your organisation Photo" accept="images/*" setFiles={setFile} files={file}  />
+              <FileUpload
+                label="Your organisation Photo"
+                accept="images/*"
+                setFiles={setFile}
+                files={file}
+              />
               {/* organisation type */}
               <div className="space-y-2">
                 <label htmlFor="orgType" className="text-sm font-medium">
@@ -200,7 +229,7 @@ export default function OrganisationRegistration(props: {
               {/* location */}
               <div className="space-y-2 flex flex-col gap-2">
                 <label className="text-sm font-medium">Location*</label>
-                {location?.address && (
+                {location && (
                   <Card className="bg-gray-50 border border-gray-200 shadow-none">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-base font-semibold">
@@ -214,24 +243,28 @@ export default function OrganisationRegistration(props: {
                       <div className="space-y-1 text-sm">
                         <div>
                           <span className="font-medium">Address:</span>{" "}
-                          <span>{location.address || "—"}</span>
+                          <span>{location || "—"}</span>
                         </div>
-                        <div>
-                          <span className="font-medium">City:</span>{" "}
-                          <span>{location.city || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium">State:</span>{" "}
-                          <span>{location.state || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium">Pincode:</span>{" "}
-                          <span>{location.postalCode || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium">Country:</span>{" "}
-                          <span>{location.country || "—"}</span>
-                        </div>
+                        {locationDetails && (
+                          <>
+                            <div>
+                              <span className="font-medium">City:</span>{" "}
+                              <span>{locationDetails.city || "—"}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium">State:</span>{" "}
+                              <span>{locationDetails.state || "—"}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium">Pincode:</span>{" "}
+                              <span>{locationDetails.postalCode || "—"}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium">Country:</span>{" "}
+                              <span>{locationDetails.country || "—"}</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </CardContent>
                   </Card>
@@ -274,11 +307,7 @@ export default function OrganisationRegistration(props: {
               </div>
             </CardContent>
             <CardFooter>
-              <SubmitButton
-                pendingText="Registering..."
-              >
-                Register
-              </SubmitButton>
+              <SubmitButton pendingText="Registering...">Register</SubmitButton>
             </CardFooter>
           </form>
         </Card>

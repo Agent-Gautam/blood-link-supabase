@@ -14,15 +14,18 @@ import {
   Plus,
   Search,
   Tent,
+  LayoutDashboard,
+  List,
 } from "lucide-react";
 import React from "react";
+import type { SidebarItem } from "@/components/app-sidebar";
 
-export default function DonorLayout({
+export default function OrganisationLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const sideBarItems = [
+  const sideBarItems: SidebarItem[] = [
     {
       title: "Home",
       url: "/organisation",
@@ -47,12 +50,24 @@ export default function DonorLayout({
       title: "Inventory",
       url: "/organisation/inventory",
       icon: <Boxes className="h-5 w-5" />, // Boxes is suitable for inventory
+      subItems: [
+        {
+          title: "Dashboard",
+          url: "/organisation/inventory",
+          icon: <LayoutDashboard className="h-4 w-4" />,
+        },
+        {
+          title: "All Inventory",
+          url: "/organisation/inventory/all",
+          icon: <List className="h-4 w-4" />,
+        },
+      ],
     },
   ];
 
   return (
     <SidebarProvider>
-        <AppSideBar items={sideBarItems} />
+      <AppSideBar items={sideBarItems} />
       <div className="w-full flex min-h-screen p-5 relative">
         {/* Sidebar */}
         <SidebarTrigger className="absolute top-0 left-0" />

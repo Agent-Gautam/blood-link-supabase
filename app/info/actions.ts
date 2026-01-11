@@ -1,8 +1,25 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { ApiResponse, DonorDetailsData } from "@/app/types";
 
-export async function fetchOrganisationDetails(orgId: string) {
+type OrganisationDetailsData = {
+  id: string;
+  name: string;
+  email: string;
+  adminFirstName: string;
+  adminLastName: string;
+  type: string;
+  address: string;
+  contactNumber: string;
+  createdAt: string;
+  isVerified: boolean;
+  managesBloodInventory: boolean;
+};
+
+export async function fetchOrganisationDetails(
+  orgId: string
+): Promise<ApiResponse<OrganisationDetailsData>> {
   const supabase = await createClient();
   try {
     const { data, error } = await supabase
@@ -12,11 +29,11 @@ export async function fetchOrganisationDetails(orgId: string) {
       .single();
 
     if (error && error.code === "PGRST116") {
-      return { success: false, message: "Organization not found" };
+      return { success: false, error: "Organization not found" };
     }
     if (error) {
       console.log("Error fetching organization details:", error);
-      return { success: false, message: error.message };
+      return { success: false, error: error.message };
     }
     const orgData = {
       id: data.id,
@@ -34,11 +51,13 @@ export async function fetchOrganisationDetails(orgId: string) {
     return { success: true, data: orgData };
   } catch (error: any) {
     console.log("Error fetching organization details:", error);
-    return { success: false, message: error.message };
+    return { success: false, error: error.message };
   }
 }
 
-export async function fetchDonorDetails(donorId: string) {
+export async function fetchDonorDetails(
+  donorId: string
+): Promise<ApiResponse<DonorDetailsData>> {
   const supabase = await createClient();
   try {
     const { data, error } = await supabase
@@ -47,11 +66,11 @@ export async function fetchDonorDetails(donorId: string) {
       .eq("id", donorId)
       .single();
     if (error && error.code === "PGRST116") {
-      return { success: false, message: "Donor not found" };
+      return { success: false, error: "Donor not found" };
     }
     if (error) {
       console.log("Error fetching donor details:", error);
-      return { success: false, message: error.message };
+      return { success: false, error: error.message };
     }
     const donorData = {
       id: data.id,
@@ -68,15 +87,42 @@ export async function fetchDonorDetails(donorId: string) {
       lastDonationDate: data.last_donation_date,
       isAnonymous: data.is_anonymous,
       healthConditions: data.health_conditions,
+      xp: data.xp,
     };
     return { success: true, data: donorData };
   } catch (error: any) {
     console.log("Error fetching donor details:", error);
-    return { success: false, message: error.message };
+    return { success: false, error: error.message };
   }
 }
 
-export async function fetchCampDetails(campId: string) {
+type CampDetailsData = {
+  id: string;
+  name: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  latitude: number;
+  longitude: number;
+  bannerUrl: string | null;
+  organization: {
+    id: string;
+    name: string;
+    type: string;
+    address: string;
+    contactNumber: string;
+  };
+  bloodBank: {
+    id: string | null;
+    name: string | null;
+    contactNumber: string | null;
+    address: string | null;
+  };
+};
+
+export async function fetchCampDetails(
+  campId: string
+): Promise<ApiResponse<CampDetailsData>> {
   const supabase = await createClient();
   try {
     const { data, error } = await supabase
@@ -85,11 +131,11 @@ export async function fetchCampDetails(campId: string) {
       .eq("id", campId)
       .single();
     if (error && error.code === "PGRST116") {
-      return { success: false, message: "Camp not found" };
+      return { success: false, error: "Camp not found" };
     }
     if (error) {
       console.log("Error fetching camp details:", error);
-      return { success: false, message: error.message };
+      return { success: false, error: error.message };
     }
 
     const campData = {
@@ -100,6 +146,7 @@ export async function fetchCampDetails(campId: string) {
       endDate: data.end_date,
       latitude: data.latitude,
       longitude: data.longitude,
+      bannerUrl: data.banner_url,
       organization: {
         id: data.organisation_id,
         name: data.organisation_name,
@@ -117,6 +164,6 @@ export async function fetchCampDetails(campId: string) {
     return { success: true, data: campData };
   } catch (error: any) {
     console.log("Error fetching camp details:", error);
-    return { success: false, message: error.message };
+    return { success: false, error: error.message };
   }
 }

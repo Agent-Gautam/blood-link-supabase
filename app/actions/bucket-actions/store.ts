@@ -18,7 +18,11 @@ interface UploadParams {
   file: File;
 }
 
-export async function uploadEntityImage(entityType: EntityType, entityId: string, file: File) {
+export async function uploadEntityImage(
+  entityType: EntityType,
+  entityId: string,
+  file: File
+) {
   const bucket = bucketMap[entityType];
   const extension = file.name.split(".").pop() || "jpg";
   const path = `${entityId}/photo.${extension}`;
@@ -35,18 +39,28 @@ export async function uploadEntityImage(entityType: EntityType, entityId: string
       },
     }
   );
-  
-  const { error } = await supabase.storage.from(bucket).upload(path, buffer, {
-    contentType: file.type,
-    upsert: true, // allow replacing the existing image
-  });
+
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(path, buffer, {
+      contentType: file.type,
+      upsert: true, // allow replacing the existing image
+    });
 
   if (error) {
     console.log("Error uploading image:", error);
     return { success: false, error: { message: error.message } };
   }
 
-  return {
-    success: true,
-  };
+  if (data) {
+    return {
+      success: true,
+      data: data.path,
+    };
+  } else { 
+    return {
+      success: false,
+      error: { message: "Failed to upload image" },
+    };
+  }
 }

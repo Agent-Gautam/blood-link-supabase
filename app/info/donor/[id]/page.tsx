@@ -18,25 +18,14 @@ import {
 import { fetchDonorDetails } from "../../actions";
 import fetchImage from "@/app/actions/bucket-actions/fetch";
 import Image from "next/image";
+import XPLevel from "@/app/donor/components/xp-level";
+import { DonorDetailsData } from "@/app/types";
 
-interface DonorDetails {
-    id: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-    phoneNumber: string;
-    bloodType: string;
-    dateOfBirth: string;
-    gender: string;
-    address: string;
-    lastDonationDate: string;
-    healthConditions: string[];
-    isActive: boolean;
-  photoUrl?: string;
-  isAnonymous: boolean;
-  };
-
-export default async function DonorDetails({ params }: { params: { id: string } }) {
+export default async function DonorDetails({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
   const searchParams = await params;
   const donorId = searchParams.id;
   const res = await fetchDonorDetails(donorId);
@@ -48,9 +37,10 @@ export default async function DonorDetails({ params }: { params: { id: string } 
       </div>
     );
   }
-  const donor: DonorDetails = res.data!;
+  const donor: DonorDetailsData = res.data!;
   const age =
     new Date().getFullYear() - new Date(donor.dateOfBirth).getFullYear();
+  const donorPhotoUrl = await fetchImage("donor-photo", donorId);
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -59,7 +49,7 @@ export default async function DonorDetails({ params }: { params: { id: string } 
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
             <Avatar className="w-24 h-24">
-              <AvatarImage src={fetchImage("donor-photo", donorId) || "/placeholder.svg"} />
+              <AvatarImage src={donorPhotoUrl || "/placeholder.svg"} />
               <AvatarFallback className="text-2xl">
                 {donor.firstName[0]}
                 {donor.lastName[0]}
@@ -185,7 +175,7 @@ export default async function DonorDetails({ params }: { params: { id: string } 
                   Health Conditions
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {donor.healthConditions}
+                  {donor.healthConditions || "None"}
                 </div>
               </div>
             </CardContent>
@@ -194,6 +184,9 @@ export default async function DonorDetails({ params }: { params: { id: string } 
 
         {/* Donation History */}
         <div className="space-y-6">
+          {/* XP Level Card */}
+          <XPLevel xp={donor.xp} />
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -209,14 +202,16 @@ export default async function DonorDetails({ params }: { params: { id: string } 
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-muted-foreground" />
                   <span className="text-sm">
-                    {new Date(donor.lastDonationDate).toLocaleDateString(
-                      "en-US",
-                      {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                      }
-                    )}
+                    {donor.lastDonationDate
+                      ? new Date(donor.lastDonationDate).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          }
+                        )
+                      : "No donations yet"}
                   </span>
                 </div>
               </div>

@@ -3,9 +3,12 @@
 import { createClient, getUser } from "@/utils/supabase/server";
 import { encodedRedirect } from "@/utils/utils";
 import { revalidatePath } from "next/cache";
+import { ApiResponse, DonationCamp, DonorInfo } from "../types";
 
 //camp creation action
-export async function CreateCampAction(formData: FormData) {
+export async function CreateCampAction(
+  formData: FormData
+): Promise<ApiResponse<any> | null> {
   const user = await getUser();
   if (!user) {
     console.log("not authorized");
@@ -21,17 +24,19 @@ export async function CreateCampAction(formData: FormData) {
   const endDate = formData.get("end_date")?.toString();
   const bloodBankId = formData.get("blood_bank_id")?.toString();
   const id = formData.get("id")?.toString();
+  const bannerUrl = formData.get("banner_url")?.toString();
   console.log(formData);
 
   const { error } = await supabase.from("donation_camps").upsert({
     id: id,
-    organisation_id: user.organisation_id,
+    organisation_id: user.id,
     name: name,
     location: location,
     geo_points: `POINT(${longitude} ${latitude})`,
     start_date: startdate,
     end_date: endDate,
     blood_bank_id: bloodBankId,
+    banner_url: bannerUrl,
   });
   if (error) {
     console.error(error.message);
@@ -47,19 +52,20 @@ export async function CreateCampAction(formData: FormData) {
 }
 
 // fetch single camp by id
-export async function fetchCamp(camp_id: string, org_id: string) {
+export async function fetchCamp(
+  camp_id: string,
+  org_id: string
+): Promise<ApiResponse<DonationCamp>> {
   if (!camp_id || !org_id) {
     console.log("camp_id and org_id are required");
     return { success: false, message: "camp_id and org_id are required" };
   }
   const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("donation_camps")
-    .select("*")
-    .eq("id", camp_id)
-    .eq("organisation_id", org_id)
-    .single();
+  const { data, error } = await supabase.rpc("get_donation_camp_with_latlon", {
+    p_camp_id: camp_id,
+    p_organisation_id: org_id,
+  });
 
   if (error) {
     console.log(error.message);
@@ -70,35 +76,43 @@ export async function fetchCamp(camp_id: string, org_id: string) {
 }
 
 export async function fetchAllCamps(
-  org_id: string,
   filters = {},
-  sort = { column: "start_date", order: "asc" },
+  sort = "",
   search = ""
-) {
-  if (!org_id) {
-    console.log("org_id is required");
-    return { success: false, message: "org_id is required" };
+): Promise<ApiResponse<DonationCamp[]>> {
+  const user = await getUser();
+  if (!user || !user.id) {
+    console.log("user is not authorized");
+    return { success: false, message: "user is not authorized" };
   }
   const supabase = await createClient();
 
   let query = supabase
     .from("donation_camps")
     .select("*")
-    .eq("organisation_id", org_id);
+    .eq("organisation_id", user.id);
 
   // Apply filters
   for (const [key, value] of Object.entries(filters)) {
-    query = query.eq(key, value);
+    if (value && typeof value === "string" && value.trim()) {
+      // Use ilike for location to allow partial matching
+      if (key === "location") {
+        query = query.ilike(key, `%${value}%`);
+      } else {
+        query = query.eq(key, value);
+      }
+    }
   }
 
   // Apply search
   if (search) {
     query = query.ilike("name", `%${search}%`);
   }
+  const [column, order] = sort ? sort.split("-") : ["start_date", "asc"];
 
   // Apply sorting
-  if (sort && sort.column) {
-    query = query.order(sort.column, { ascending: sort.order === "asc" });
+  if (column && order) {
+    query = query.order(column as string, { ascending: order === "asc" });
   }
 
   const { data, error } = await query;
@@ -111,7 +125,16 @@ export async function fetchAllCamps(
   return { success: true, data };
 }
 
-export async function fetchCampData(campId: string) {
+type CampData = {
+  camp: DonationCamp;
+  registrations: number | null;
+  donations: any[];
+  donors: any[];
+};
+
+export async function fetchCampData(
+  campId: string
+): Promise<ApiResponse<CampData>> {
   const supabase = await createClient();
 
   // Fetch camp details
@@ -122,7 +145,7 @@ export async function fetchCampData(campId: string) {
     .single();
 
   if (campError || !camp) {
-    return { error: "Camp not found" };
+    return { success: false, error: "Camp not found" };
   }
 
   // Fetch registrations and donations in parallel
@@ -136,28 +159,55 @@ export async function fetchCampData(campId: string) {
       .eq("camp_id", campId),
     supabase
       .from("donations")
-      .select("id, blood_type, donation_date, units_donated, donor:donors(id, date_of_birth,blood_type, gender, user:users(first_name, last_name) )")
+      .select(
+        "id, blood_type, donation_date, units_donated, donor:donors(id, date_of_birth,blood_type, gender, user:users(first_name, last_name) )"
+      )
       .eq("donation_camp_id", campId),
   ]);
   console.log(regError, donError);
 
   if (regError || donError) {
-    return { error: "Error fetching data" };
+    return { success: false, error: "Error fetching data" };
   }
-  const donors = donations.map(don => ({...don.donor, donation_date: don.donation_date}));
+  const donors = donations.map((don) => ({
+    ...don.donor,
+    donation_date: don.donation_date,
+  }));
 
-  return { camp, registrations, donations, donors };
+  return {
+    success: true,
+    data: { camp: camp as DonationCamp, registrations, donations, donors },
+  };
 }
 
 //donor related actions
-export async function searchDonor(formData: FormData) {
+type DonorSearchResult = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  age: number;
+  gender: string;
+  blood_type: string;
+  email: string;
+  phone_number: string;
+  last_donation_date: string | null;
+  is_eligible: boolean;
+  health_conditions: string | null;
+};
+
+export async function searchDonor(
+  formData: FormData
+): Promise<ApiResponse<DonorSearchResult>> {
   const supabase = await createClient();
 
   const email = formData.get("email") as string;
   const phone = formData.get("phone") as string;
 
   if (!email && !phone) {
-    return { error: "Please provide either email or phone number" };
+    return {
+      success: false,
+      error: "Please provide either email or phone number",
+    };
   }
 
   let query = supabase.from("users").select("*, donors(*)").eq("role", "DONOR");
@@ -171,7 +221,7 @@ export async function searchDonor(formData: FormData) {
   const { data: users, error } = await query;
 
   if (error || !users || users.length === 0) {
-    return { error: "Donor not found" };
+    return { success: false, error: "Donor not found" };
   }
 
   const user = users[0];
@@ -187,7 +237,8 @@ export async function searchDonor(formData: FormData) {
     (today.getTime() - lastDonation.getTime()) / (1000 * 3600 * 24) > 56;
 
   return {
-    donor: {
+    success: true,
+    data: {
       id: donor.id,
       first_name: user.first_name,
       last_name: user.last_name,
@@ -203,7 +254,9 @@ export async function searchDonor(formData: FormData) {
   };
 }
 
-export async function registerDonor(formData: FormData) {
+export async function registerDonor(
+  formData: FormData
+): Promise<ApiResponse<DonorSearchResult>> {
   const supabase = await createClient();
 
   const userData = {
@@ -221,11 +274,14 @@ export async function registerDonor(formData: FormData) {
     .single();
 
   if (userError || !user) {
-    return { error: `Failed to create user ${userError?.message}` };
+    return {
+      success: false,
+      error: `Failed to create user ${userError?.message}`,
+    };
   }
 
   const donorData = {
-    user_id: user.id,
+    id: user.id,
     blood_type: formData.get("blood_type") as string,
     date_of_birth: formData.get("date_of_birth") as string,
     gender: formData.get("gender") as string,
@@ -246,7 +302,10 @@ export async function registerDonor(formData: FormData) {
 
   if (donorError || !donor) {
     await supabase.from("users").delete().eq("id", user.id);
-    return { error: `Failed to create donor ${donorError?.message}` };
+    return {
+      success: false,
+      error: `Failed to create donor ${donorError?.message}`,
+    };
   }
 
   const today = new Date();
@@ -254,7 +313,8 @@ export async function registerDonor(formData: FormData) {
   const age = today.getFullYear() - dob.getFullYear();
 
   return {
-    donor: {
+    success: true,
+    data: {
       id: donor.id,
       first_name: user.first_name,
       last_name: user.last_name,
@@ -270,7 +330,9 @@ export async function registerDonor(formData: FormData) {
   };
 }
 
-export async function addDonation(formData: FormData) {
+export async function addDonation(
+  formData: FormData
+): Promise<ApiResponse<void>> {
   const supabase = await createClient();
   const campId = formData.get("camp_id") as string;
   const donorId = formData.get("donor_id") as string;
@@ -287,7 +349,7 @@ export async function addDonation(formData: FormData) {
   const { error } = await supabase.from("donations").insert(donationData);
 
   if (error) {
-    return { error: "Failed to add donation" };
+    return { success: false, error: "Failed to add donation" };
   }
 
   await supabase

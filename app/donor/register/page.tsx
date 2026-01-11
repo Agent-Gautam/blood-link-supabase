@@ -39,6 +39,7 @@ import { getUser } from "@/utils/supabase/server";
 import { uploadEntityImage } from "@/app/actions/bucket-actions/store";
 import React from "react";
 import FileUpload from "@/components/file-upload";
+import { User } from "@supabase/supabase-js";
 const MapComponent = dynamic(
   () => import("@/components/location/map-with-search"),
   {
@@ -46,20 +47,32 @@ const MapComponent = dynamic(
   }
 );
 
+type UserWithId = User["user_metadata"] & { id: string };
+
+type LocationDetails = {
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
 export default function DonorRegistration() {
   const [coordinates, setCoordinates] = useState<Coordinates | null>(null);
-  const [location, setLocation] = useState<Location>();
+  const [location, setLocation] = useState<Location | undefined>();
+  const [locationDetails, setLocationDetails] =
+    useState<LocationDetails | null>(null);
   const [showMap, setShowMap] = useState(false);
-    const [file, setFile] = useState<File | null>(null);
-  const [user, setUser] = useState();
+  const [file, setFile] = useState<File | null>(null);
+  const [user, setUser] = useState<UserWithId | null>(null);
 
-    useEffect(() => {
-      async function fetchUser() {
-        const user = await getUser();
-        setUser(user);
-      }
-      fetchUser();
-    },[])
+  useEffect(() => {
+    async function fetchUser() {
+      const userData = await getUser();
+      setUser(userData as UserWithId);
+    }
+    fetchUser();
+  }, []);
 
   const handleSubmit = async (formData: FormData) => {
     // Client-side validation
@@ -80,29 +93,26 @@ export default function DonorRegistration() {
       toast.error("Gender is required");
       return;
     }
-    if (
-      !location ||
-      !location.state ||
-      !location.city ||
-      !location.country ||
-      !coordinates
-    ) {
+    if (!location || !coordinates) {
       toast.error("Please select a valid location from the map");
       return;
     }
 
-        // uploading image to supabase storage
-    if (file) {
-      const fileRes = await uploadEntityImage(
-        "donor",user?.id,file )
+    // uploading image to supabase storage
+    if (file && user?.id) {
+      const fileRes = await uploadEntityImage("donor", user.id, file);
     }
 
     // Append location fields to FormData
-    formData.set("address", location.address);
-    formData.set("city", location.city);
-    formData.set("state", location.state);
-    formData.set("postcode", location.postalCode);
-    formData.set("country", location.country);
+    if (locationDetails) {
+      formData.set("address", locationDetails.address);
+      formData.set("city", locationDetails.city);
+      formData.set("state", locationDetails.state);
+      formData.set("postcode", locationDetails.postalCode);
+      formData.set("country", locationDetails.country);
+    } else {
+      formData.set("address", location || "");
+    }
     formData.set("lat", coordinates.lat.toString());
     formData.set("lng", coordinates.lng.toString());
 
@@ -122,11 +132,15 @@ export default function DonorRegistration() {
 
   const handleLocationChange = (
     newLocation: Location,
-    newCoordinates: Coordinates
+    newCoordinates: Coordinates,
+    details?: LocationDetails
   ) => {
-    if (newCoordinates.lat && newCoordinates.lng && newLocation.address) {
+    if (newCoordinates.lat && newCoordinates.lng && newLocation) {
       setLocation(newLocation);
       setCoordinates(newCoordinates);
+      if (details) {
+        setLocationDetails(details);
+      }
     }
   };
   return (
@@ -214,24 +228,28 @@ export default function DonorRegistration() {
                       <div className="space-y-1 text-sm">
                         <div>
                           <span className="font-medium">Address:</span>{" "}
-                          <span>{location.address || "—"}</span>
+                          <span>{location || "—"}</span>
                         </div>
-                        <div>
-                          <span className="font-medium">City:</span>{" "}
-                          <span>{location.city || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium">State:</span>{" "}
-                          <span>{location.state || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium">Pincode:</span>{" "}
-                          <span>{location.postalCode || "—"}</span>
-                        </div>
-                        <div>
-                          <span className="font-medium">Country:</span>{" "}
-                          <span>{location.country || "—"}</span>
-                        </div>
+                        {locationDetails && (
+                          <>
+                            <div>
+                              <span className="font-medium">City:</span>{" "}
+                              <span>{locationDetails.city || "—"}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium">State:</span>{" "}
+                              <span>{locationDetails.state || "—"}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium">Pincode:</span>{" "}
+                              <span>{locationDetails.postalCode || "—"}</span>
+                            </div>
+                            <div>
+                              <span className="font-medium">Country:</span>{" "}
+                              <span>{locationDetails.country || "—"}</span>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

@@ -1,6 +1,18 @@
 import AppSideBar from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { Circle, HeartPlus, History, Home, MessageSquareDiff, Search } from "lucide-react";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import {
+  Circle,
+  HeartPlus,
+  History,
+  Home,
+  MessageSquareDiff,
+  Search,
+  User,
+} from "lucide-react";
 import React from "react";
 
 export default function DonorLayout({
@@ -32,22 +44,27 @@ export default function DonorLayout({
     {
       title: "Donation History",
       url: "/donor/donation-history",
-      icon: <History />
+      icon: <History className="h-5 w-5" />,
+    },
+    {
+      title: "Profile",
+      url: "/donor/profile",
+      icon: <User className="h-5 w-5" />,
     },
   ];
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen">
+      <div className="flex min-h-screen w-full">
         {/* Sidebar */}
         <AppSideBar items={sideBarItems} />
 
         {/* Main Content */}
         <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-40 bg-background border-b border-border px-4 py-3 flex items-center">
+          <header className="sticky top-0 z-40 bg-background border-b border-border px-4 py-3 flex items-center justify-between">
             <SidebarTrigger className="mr-2" />
           </header>
-            <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-6">{children}</main>
         </div>
       </div>
     </SidebarProvider>

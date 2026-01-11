@@ -1,10 +1,10 @@
-import { createClient, getUser } from "@/utils/supabase/server";
+import { getUser } from "@/utils/supabase/server";
 import DonorStats from "./components/donor-stats";
 import DonationHistory from "./components/donation-history";
 import {
   Card,
+  CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -13,79 +13,130 @@ import Link from "next/link";
 import { fetchRequestHistory } from "./request/actions";
 import { DonorRequestTable } from "./components/request-table";
 import fetchDonations from "./donation-history/actions";
+import DonorProfile from "./components/profile";
+import { fetchDonor } from "./actions";
+import CompleteProfilePrompt from "../organisation/components/complete-profile-prompt";
+import { DonorWithUser } from "./types";
+import { HeartHandshake, Plus } from "lucide-react";
+
 export default async function DonorDashboard() {
-  const supabase = await createClient();
   const user = await getUser();
-  
-  if (!user) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        Please login to view your dashboard
-      </div>
-    );
+  const donorId = user?.id;
+  const res = await fetchDonor(donorId);
+
+  if (!res.success || !res.data) {
+    return <CompleteProfilePrompt />;
   }
-  const userName = user.firstName + " " + user.lastName;
-  const { data, error: userDetailError } = await supabase
-    .from("donors")
-    .select("*")
-    .eq("user_id", user.id)
-    .single();
-  if (!data) {
-    console.log("Error getting user details : ", userDetailError);
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle>Complete Your Profile</CardTitle>
-            <CardDescription>
-              You need to complete your donor profile to access the dashboard.
-            </CardDescription>
-          </CardHeader>
-          <CardFooter>
-            <Button asChild>
-              <Link href="/donor/register">Complete Profile</Link>
-            </Button>
-          </CardFooter>
-        </Card>
-      </div>
-    );
-  }
-  const donationres = await fetchDonations(data.id, { limit: 5 });
-  const donationData = donationres?.data;
-  if (donationData && Array.isArray(donationData)) {
-    donationData.forEach((donation: any) => {
-      delete donation.donation_camp_id;
-      delete donation.organisation_id;
-    });
-  }
+
+  // Map user metadata to match DonorWithUser type
+  const donor: DonorWithUser = {
+    ...res.data,
+    users: {
+      firstName: (user as any).firstName || (user as any).first_name || "",
+      lastName: (user as any).lastName || (user as any).last_name || "",
+      email: (user as any).email || "",
+    },
+  };
+
   const requestsResult = await fetchRequestHistory(5);
-  const requestsData = requestsResult?.data;
-  const blood_group = data?.blood_type;
+  const requestsData = requestsResult?.data || [];
+
+  const donationsResult = await fetchDonations(donorId, { limit: 5 });
+  // Map donations to match DonationHistoryProps structure
+  const donationsData =
+    donationsResult?.data?.map((donation: any) => ({
+      id: donation.id,
+      donation_date: donation.donation_date,
+      donation_camps: donation.donation_camps || { name: "", location: "" },
+      units_donated: donation.units_donated,
+      status: donation.status,
+      organisations: donation.organisations || { name: "" },
+      organisation_id: donation.organisation_id,
+      donation_camp_id: donation.donation_camp_id,
+    })) || [];
+
   return (
-    <div>
-      <h1>Welcome {userName}</h1>
-      <h2>Your blood group {blood_group}</h2>
-      <Link href={"/donor/request"}>
-        <Button>Request for blood</Button>
-      </Link>
-      {/* stats */}
-      <DonorStats
-        lastDonationDate={data.last_donation_date ?? "N/A"}
-        nextEligibleDate={data.next_eligible_date ?? "N/A"}
-        donationCounts={donationData?.length || 0}
-      />
-      <div className="mt-12">
-        <h2 className="text-2xl font-bold text-gray-800 mb-6">
-          Recent Blood Donation Requests
-        </h2>
-        <div className="mb-4">
-          <Link href="/donor/request/history">
-            <Button variant="outline">View All Requests</Button>
-          </Link>
-        </div>
-        <DonorRequestTable requests={requestsData ? requestsData : []} />
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto space-y-8">
+        {/* Profile Section */}
+        <DonorProfile donorData={donor} />
+
+        {/* Quick Actions */}
+        <Card className="shadow-sm border border-red-100 bg-white/95 backdrop-blur-sm">
+          <CardContent className="pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+              <Link href="/donor/request" className="flex-1">
+                <Button
+                  size="lg"
+                  className="w-full sm:w-auto gap-2 bg-red-600 hover:bg-red-700 text-white shadow-md hover:shadow-lg transition-all duration-200"
+                >
+                  <HeartHandshake className="h-5 w-5" />
+                  Request for Blood
+                </Button>
+              </Link>
+              <Link href="/donor/donation-camps" className="flex-1">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="w-full sm:w-auto gap-2 border-red-200 text-red-700 hover:bg-red-50 transition-colors duration-200"
+                >
+                  <Plus className="h-5 w-5" />
+                  Find Donation Camp
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Stats Section */}
+        <section aria-label="Donation Statistics">
+          <DonorStats />
+        </section>
+
+        {/* Blood Donation Requests Section */}
+        <Card className="shadow-sm border border-red-100 bg-white/95 backdrop-blur-sm transition-all duration-300 hover:shadow-md">
+          <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
+            <div>
+              <CardTitle className="text-2xl font-bold tracking-tight text-gray-900">
+                Recent Blood Donation Requests
+              </CardTitle>
+              <CardDescription className="mt-1.5 text-base">
+                Track your recent blood requests and their status
+              </CardDescription>
+            </div>
+            <Link href="/donor/request/history">
+              <Button
+                variant="outline"
+                className="border-red-200 text-red-700 hover:bg-red-50 font-medium transition-colors duration-200"
+              >
+                View All Requests
+              </Button>
+            </Link>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {requestsData.length > 0 ? (
+              <DonorRequestTable requests={requestsData} />
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">
+                  You haven't made any blood requests yet.
+                </p>
+                <Link href="/donor/request">
+                  <Button variant="default" className="gap-2">
+                    <HeartHandshake className="h-4 w-4" />
+                    Create Your First Request
+                  </Button>
+                </Link>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Donation History Section */}
+        <section aria-label="Donation History">
+          <DonationHistory donationData={donationsData} />
+        </section>
       </div>
-      <DonationHistory donationData={donationData} />
     </div>
   );
 }

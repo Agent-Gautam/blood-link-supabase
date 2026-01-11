@@ -1,5 +1,4 @@
-import fetchInventoryAction from "../inventory/actions";
-import { DropletIcon } from "lucide-react";
+import { DropletIcon, Droplet } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -10,21 +9,33 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
+import { InventorySummary } from "../types";
+import EmptyState from "@/components/empty-state";
+import { Plus } from "lucide-react";
 
-export default async function InventoryShowcase({
-  org_id,
+export default function InventoryShowcase({
+  inventory,
 }: {
-  org_id: string;
+  inventory: InventorySummary[] | null;
 }) {
-  const result = await fetchInventoryAction(org_id);
-  if (!result || result.error) {
-    console.error(
-      "Failed to fetch inventory:",
-      result?.error || "Unknown error"
+  if (!inventory || inventory.length === 0) {
+    return (
+      <EmptyState
+        title="No Inventory Yet"
+        description="Your blood bank inventory is empty. Start by adding your first blood units to begin tracking and managing your stock effectively."
+        icon={Droplet}
+        showAddButton={false}
+        footer={
+          <Link href="/organisation/inventory/all">
+            <Button size="lg" className="gap-2">
+              <Plus className="h-5 w-5" />
+              Add First Inventory
+            </Button>
+          </Link>
+        }
+      />
     );
-    return <div>Error loading inventory.</div>;
   }
-  const inventory = result.data;
   return (
     <Card>
       <CardHeader>

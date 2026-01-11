@@ -1,11 +1,14 @@
 import { DropletIcon } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
+
 type StatBoxProps = {
   heading: string;
   data: number | string;
   icon: any;
   additional?: any;
-  className: string
+  className?: string;
+  isLoading?: boolean;
 };
 
 export default function StatBox({
@@ -13,7 +16,8 @@ export default function StatBox({
   data,
   icon,
   additional,
-  className
+  className = "",
+  isLoading = false,
 }: StatBoxProps) {
   return (
     <Card className={className}>
@@ -22,8 +26,17 @@ export default function StatBox({
         {icon}
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{data}</div>
-        <div className="text-xs text-muted-foreground">{additional}</div>
+        {isLoading ? (
+          <>
+            <Skeleton className="h-8 w-20 mb-2" />
+            <Skeleton className="h-4 w-32" />
+          </>
+        ) : (
+          <>
+            <div className="text-2xl font-bold">{data}</div>
+            <div className="text-xs text-muted-foreground">{additional}</div>
+          </>
+        )}
       </CardContent>
     </Card>
   );

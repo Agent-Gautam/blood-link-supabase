@@ -28,23 +28,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Droplet, Loader, Plus } from "lucide-react";
-import { addNewInventoryRecord, fetchAllInventory, updateInventoryRecord } from "../inventory/actions";
+import {
+  addNewInventoryRecord,
+  fetchAllInventory,
+  updateInventoryRecord,
+} from "../inventory/actions";
 import { formatDate } from "@/lib/utils";
 import TableSkeleton from "@/components/table-skeleton";
 import { toast } from "sonner";
-
-type inventory = {
-  id: string;
-  organisation_id: string;
-  added_at: string;
-  last_updated: string;
-  blood_type: string;
-  units: number;
-  expiry_date: string;
-};
+import { InventoryRecord } from "../types";
+import EmptyState from "@/components/empty-state";
 
 export default function InventoryTable({ org_id }: { org_id: string }) {
-  const [allInventory, setAllInventory] = useState<inventory[]>([]);
+  const [allInventory, setAllInventory] = useState<InventoryRecord[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingQuantity, setEditingQuantity] = useState<number | undefined>(
     undefined
@@ -53,9 +49,10 @@ export default function InventoryTable({ org_id }: { org_id: string }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const fetchInventory = async () => {
     setLoading(true);
-      const result = await fetchAllInventory(org_id);
-      if (!result.success) toast.error(`Error fetching innvetory ${result.error}`)
-      const inventories = result.data;
+    const result = await fetchAllInventory(org_id);
+    if (!result.success)
+      toast.error(`Error fetching innvetory ${result.error}`);
+    const inventories = result.data;
     setAllInventory(inventories);
     setLoading(false);
   };
@@ -77,9 +74,9 @@ export default function InventoryTable({ org_id }: { org_id: string }) {
       const result = await updateInventoryRecord(editingId, editingQuantity);
       setEditingId(null);
       setEditingQuantity(undefined);
-        await fetchInventory();
-        if (result.success) toast.success("Inventory Updated");
-        else toast.error(`Eror updating inventoroy ${result.error}`);
+      await fetchInventory();
+      if (result.success) toast.success("Inventory Updated");
+      else toast.error(`Eror updating inventoroy ${result.error}`);
     }
     setLoading(false);
   };
@@ -103,6 +100,33 @@ export default function InventoryTable({ org_id }: { org_id: string }) {
       </div>
       {loading ? (
         <TableSkeleton />
+      ) : allInventory.length === 0 ? (
+        <EmptyState
+          title="No Inventory Yet"
+          description="Your blood bank inventory is empty. Start by adding your first blood units to begin tracking and managing your stock effectively."
+          icon={Droplet}
+          buttonText="Add First Inventory"
+          buttonIcon={Plus}
+          onAdd={() => setDialogOpen(true)}
+          footer={
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {["A+", "B+", "AB+", "O+"].map((type) => (
+                <div
+                  key={type}
+                  className="flex flex-col items-center p-4 rounded-lg border border-dashed border-border bg-muted/30"
+                >
+                  <Droplet className="h-6 w-6 text-muted-foreground/50 mb-2" />
+                  <span className="text-sm font-medium text-muted-foreground/70">
+                    {type}
+                  </span>
+                  <span className="text-xs text-muted-foreground/50">
+                    0 units
+                  </span>
+                </div>
+              ))}
+            </div>
+          }
+        />
       ) : (
         <Table>
           <TableHeader>
@@ -130,7 +154,9 @@ export default function InventoryTable({ org_id }: { org_id: string }) {
                     <Input
                       type="number"
                       value={editingQuantity}
-                      onChange={(e) => setEditingQuantity(e.target.value)}
+                      onChange={(e) =>
+                        setEditingQuantity(parseInt(e.target.value))
+                      }
                       className="w-24"
                       min="0"
                     />
@@ -144,9 +170,7 @@ export default function InventoryTable({ org_id }: { org_id: string }) {
                     : "N/A"}
                 </TableCell>
                 <TableCell>
-                  {item.expiry_date
-                    ? formatDate(item.expiry_date).date
-                    : "N/A"}
+                  {item.expiry_date ? formatDate(item.expiry_date).date : "N/A"}
                 </TableCell>
                 <TableCell className="text-right">
                   {editingId === item.id ? (
@@ -185,38 +209,42 @@ export default function InventoryTable({ org_id }: { org_id: string }) {
   );
 }
 type AddInventoryProps = {
-    dialogOpen: boolean;
-    setDialogOpen: (open: boolean) => void;
-    org_id: string;
-    fetchInventory: () => void;
+  dialogOpen: boolean;
+  setDialogOpen: (open: boolean) => void;
+  org_id: string;
+  fetchInventory: () => void;
 };
-function AddInventory({ dialogOpen, setDialogOpen, org_id, fetchInventory }: AddInventoryProps) {
-    const [newBloodType, setNewBloodType] = useState("A+");
-    const [newQuantity, setNewQuantity] = useState<string>("");
-    const [newExpiryDate, setNewExpiryDate] = useState<string>("");
-    const [loading, setLoading] = useState(false);
-    async function handleAddInventory() {
-        setLoading(true);
-        if (newBloodType && newQuantity && newExpiryDate) {
-            const result = await addNewInventoryRecord(
-                org_id,
-                newBloodType,
-                parseInt(newQuantity) || 0,
-                newExpiryDate,
-            );
-            if (result.success) toast.success("Inventory added");
-            else toast.error(`Error adding inventory ${result.error}`)
+function AddInventory({
+  dialogOpen,
+  setDialogOpen,
+  org_id,
+  fetchInventory,
+}: AddInventoryProps) {
+  const [newBloodType, setNewBloodType] = useState("A+");
+  const [newQuantity, setNewQuantity] = useState<string>("");
+  const [newExpiryDate, setNewExpiryDate] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  async function handleAddInventory() {
+    setLoading(true);
+    if (newBloodType && newQuantity && newExpiryDate) {
+      const result = await addNewInventoryRecord(
+        org_id,
+        newBloodType,
+        parseInt(newQuantity) || 0,
+        newExpiryDate
+      );
+      if (result.success) toast.success("Inventory added");
+      else toast.error(`Error adding inventory ${result.error}`);
 
-            // Reset form fields
-            setNewBloodType("A+");
-            setNewQuantity("");
-            setNewExpiryDate("");
-            setDialogOpen(false);
-        }
-        else toast.error("Invalid inputs");
-        setLoading(false);
-        await fetchInventory();
-    } 
+      // Reset form fields
+      setNewBloodType("A+");
+      setNewQuantity("");
+      setNewExpiryDate("");
+      setDialogOpen(false);
+    } else toast.error("Invalid inputs");
+    setLoading(false);
+    await fetchInventory();
+  }
   return (
     <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
       <DialogTrigger asChild>
@@ -290,7 +318,9 @@ function AddInventory({ dialogOpen, setDialogOpen, org_id, fetchInventory }: Add
           <Button variant="outline" onClick={() => setDialogOpen(false)}>
             Cancel
           </Button>
-                  <Button onClick={handleAddInventory} disabled={loading}>{loading ? <Loader className="animate-spin" /> : "Add Inventory"}</Button>
+          <Button onClick={handleAddInventory} disabled={loading}>
+            {loading ? <Loader className="animate-spin" /> : "Add Inventory"}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

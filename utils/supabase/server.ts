@@ -1,7 +1,9 @@
 "use server";
 
 import { createServerClient } from "@supabase/ssr";
+import { User } from "@supabase/supabase-js";
 import { cookies } from "next/headers";
+import { cache } from "react";
 
 export const createClient = async () => {
   const cookieStore = await cookies();
@@ -30,27 +32,10 @@ export const createClient = async () => {
   );
 };
 
-export const getUser = async () => {
+export const getUser = cache(async (): Promise<User["user_metadata"]> => {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
-  if (!data.user) {
-    return null;
-  }
-  const userId = data.user.id;
-  const { data: userInfo } = await (await supabase)
-    .from("users")
-    .select("*, organisations(id), donors(id)")
-    .eq("id", userId)
-    .single();
-  const userData = {
-    id: userInfo.id,
-    email: userInfo.email,
-    firstName: userInfo.first_name,
-    lastName: userInfo.last_name,
-    phoneNumber: userInfo.phone_number,
-    role: userInfo.role,
-    organisation_id: userInfo.organisations?.id,
-    donor_id: userInfo.donors?.id,
-  };
-  return userData;
-};
+  // Middleware ensures user exists, so we can safely assert non-null
+  const userInfo = { ...data.user!.user_metadata, id: data.user!.id };
+  return userInfo;
+});

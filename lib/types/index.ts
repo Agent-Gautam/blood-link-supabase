@@ -9,13 +9,7 @@ export interface Coordinates {
   lng: number;
 }
 
-export interface Location {
-  country: string;
-  state: string;
-  city: string;
-  address: string;
-  postalCode: string;
-}
+export type Location = string;
 
 export interface MarkerData {
   coordinates: Coordinates;

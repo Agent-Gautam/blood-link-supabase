@@ -14,7 +14,14 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { fetchCampDetails } from "../../actions";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import MapComponent from "@/components/location/map-component";
 import { createClient, getUser } from "@/utils/supabase/server";
 import Image from "next/image";
@@ -36,20 +43,20 @@ interface CampDetails {
     contactNumber: string;
   };
   bloodBank: {
-    id: string;
-    name: string;
-    address: string;
-    contactNumber: string;
+    id: string | null;
+    name: string | null;
+    address: string | null;
+    contactNumber: string | null;
   };
   // status: "upcoming" | "ongoing" | "completed";
   // expectedDonors: number;
-  bannerUrl?: string;
+  bannerUrl: string | null;
 }
 
 export default async function CampDetails({
   params,
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
   const searchParams = await params;
   const campId = searchParams.id;
@@ -67,11 +74,16 @@ export default async function CampDetails({
   const supabase = await createClient();
   const user = await getUser();
   let userCoordinates = null;
-  if (user?.role == 'DONOR') {
-    const { data, error } = await supabase.from("donors").select("latitude, longitude").match({ user_id: user.id }).single();
+  if (user?.role == "DONOR") {
+    const { data, error } = await supabase
+      .from("donors")
+      .select("latitude, longitude")
+      .match({ id: user.id })
+      .single();
     console.log(data);
-    if(data) {userCoordinates = { lat: data?.latitude, lng: data?.longitude };}
-    
+    if (data) {
+      userCoordinates = { lat: data?.latitude, lng: data?.longitude };
+    }
   }
 
   const getStatusColor = (status: string) => {
@@ -103,20 +115,22 @@ export default async function CampDetails({
       hour12: true,
     });
   };
-  const campPhotoUrl = await fetchImage("camp-banner", campId);
+  const campPhotoUrl = camp.bannerUrl
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/camp-banner/${camp.bannerUrl}`
+    : null;
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-6">
       {/* Header Section */}
       <Card>
         <CardContent className="p-0">
-          <div className="h-48 bg-gradient-to-r from-red-500 to-pink-600 rounded-t-lg relative">
+          <div className="h-96 bg-gradient-to-r from-red-500 to-pink-600 rounded-t-lg relative">
             <div className="absolute inset-0 bg-black/20 rounded-t-lg" />
             <Image
-              src={campPhotoUrl || '/camp-placeholder.webp'}
+              src={campPhotoUrl || "/camp-placeholder-photo.jpg"}
               alt="camp banner"
-              width={500}
-              height={200}
-              className="size-full"
+              width={800}
+              height={384}
+              className="size-full object-cover h-96"
             />
             <div className="absolute bottom-4 left-6 text-white">
               <h1 className="text-3xl font-bold">{camp.name}</h1>

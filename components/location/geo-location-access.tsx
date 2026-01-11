@@ -8,7 +8,17 @@ import { CoordinatesToLocation } from "@/app/actions/map-actions/coordinates-to-
 import { Coordinates, Location } from "@/lib/types";
 
 type GeoLocationProps = {
-  onLocationSet: (newLocation: Location, newCoordinates: Coordinates) => void;
+  onLocationSet: (
+    newLocation: Location,
+    newCoordinates: Coordinates,
+    details?: {
+      address: string;
+      city: string;
+      state: string;
+      postalCode: string;
+      country: string;
+    }
+  ) => void;
 };
 
 export default function GeoLocation({ onLocationSet }: GeoLocationProps) {
@@ -16,7 +26,7 @@ export default function GeoLocation({ onLocationSet }: GeoLocationProps) {
 
   async function getCurrentLocation() {
     if (navigator.geolocation) {
-        setLoading(true);
+      setLoading(true);
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const currentCoordinates = {
@@ -28,18 +38,17 @@ export default function GeoLocation({ onLocationSet }: GeoLocationProps) {
           const result = await CoordinatesToLocation(currentCoordinates);
           if (result.success && result.data) {
             const data = result.data.results[0];
-            onLocationSet(
-              {
-                country: data.area,
-                state: data.state,
-                city: data.city || data.village || data.subDistrict,
-                postalCode: data.pincode,
-                address: data.formatted_address,
-              },
-              currentCoordinates
-            );
-              } else toast.error(`Error getting current address : ${result.error}`);
-              setLoading(false);
+            const locationAddress: Location = data.formatted_address || "";
+            const locationDetails = {
+              address: data.formatted_address || "",
+              city: data.city || "",
+              state: data.state || "",
+              postalCode: data.pincode || "",
+              country: data.area || "",
+            };
+            onLocationSet(locationAddress, currentCoordinates, locationDetails);
+          } else toast.error(`Error getting current address : ${result.error}`);
+          setLoading(false);
         },
         () => {
           toast.error("Please enable geolocation to access your location");
@@ -48,7 +57,6 @@ export default function GeoLocation({ onLocationSet }: GeoLocationProps) {
     } else {
       toast.error("Error fetching current location");
     }
-    
   }
 
   return (

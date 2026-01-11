@@ -13,11 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { User } from "@supabase/supabase-js";
 
 export default async function AuthButton() {
   const supabase = await createClient();
 
-  const user = await getUser();
+  const { data } = await supabase.auth.getUser();
+  const user = data.user?.user_metadata as User["user_metadata"] | null;
 
   if (!hasEnvVars) {
     return (
@@ -61,7 +63,7 @@ export default async function AuthButton() {
         <DropdownMenuTrigger className="border px-3 py-1 rounded-lg">{`${user.firstName} ${user.lastName}`}</DropdownMenuTrigger>
         <DropdownMenuContent>
           <DropdownMenuItem asChild>
-            <Link href={`/${user.role.toLowerCase()}`}>Dashboard</Link>
+            <Link href={`/${user.role?.toLowerCase()}`}>Dashboard</Link>
           </DropdownMenuItem>
           {/* <DropdownMenuLabel>My Account</DropdownMenuLabel> */}
           {/* <DropdownMenuSeparator /> */}

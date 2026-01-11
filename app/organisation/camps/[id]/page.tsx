@@ -4,6 +4,7 @@ import { RefreshCcw } from "lucide-react";
 import { revalidatePath } from "next/cache";
 import { SubmitButton } from "@/components/submit-button";
 import CampTabs from "../../components/camp-tabs";
+import EmptyState from "@/components/empty-state";
 
 export default async function CampDashboard({
   params,
@@ -14,6 +15,9 @@ export default async function CampDashboard({
   const campId = parameters.id;
   const { camp, registrations, donations, donors, error } =
     await fetchCampData(campId);
+  if (!camp) {
+    return <EmptyState title="Camp doesn't exist" description="Camp not found or has been removed." />;
+  }
 
   // if (error) {
   //   redirect("/not-found");

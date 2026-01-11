@@ -3,6 +3,7 @@ import DeployButton from "@/components/deploy-button";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import HeaderAuth from "@/components/header-auth";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import NotificationDrawerWrapper from "@/components/notification-drawer-wrapper";
 import { hasEnvVars } from "@/utils/supabase/check-env-vars";
 import { Geist } from "next/font/google";
 import { ThemeProvider } from "next-themes";
@@ -45,26 +46,27 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <main className="min-h-screen flex flex-col">
-              {/* Navigation Bar */}
-              <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#590202] via-[#8C0410] to-[#D91A2A] backdrop-blur-md h-16 shadow-lg transition-all duration-300">
-                <div className="flex items-center justify-between px-4 sm:px-8 h-full">
-                  {/* Logo */}
-                  <Link
-                    href="/"
-                    className="flex items-center gap-2 group focus:outline-none"
-                  >
-                    <DropletIcon className="h-8 w-8 text-white drop-shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:glow-animate" />
-                    <span className="text-2xl font-extrabold text-white tracking-tight group-hover:glow-animate transition">
-                      BloodLink
-                    </span>
-                  </Link>
-                  {/* Right Side Buttons */}
-                  <div className="flex gap-3">
-                    <HeaderAuth />
-                    <ThemeSwitcher />
-                  </div>
+            {/* Navigation Bar */}
+            <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-[#590202] via-[#8C0410] to-[#D91A2A] backdrop-blur-md h-16 shadow-lg transition-all duration-300">
+              <div className="flex items-center justify-between px-4 sm:px-8 h-full">
+                {/* Logo */}
+                <Link
+                  href="/"
+                  className="flex items-center gap-2 group focus:outline-none"
+                >
+                  <DropletIcon className="h-8 w-8 text-white drop-shadow-lg transition-transform duration-200 group-hover:scale-110 group-hover:glow-animate" />
+                  <span className="text-2xl font-extrabold text-white tracking-tight group-hover:glow-animate transition">
+                    BloodLink
+                  </span>
+                </Link>
+                {/* Right Side Buttons */}
+                <div className="flex gap-3 items-center">
+                  <NotificationDrawerWrapper />
+                  <HeaderAuth />
+                  <ThemeSwitcher />
                 </div>
-                <style>{`
+              </div>
+              <style>{`
                 .glow-hover:hover, .group:hover .glow-animate {
                   box-shadow: 0 0 8px 2px #f43f5e, 0 0 16px 4px #ef4444;
                   filter: drop-shadow(0 0 8px #f43f5e);

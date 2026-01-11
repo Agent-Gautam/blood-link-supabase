@@ -1,8 +1,9 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+import { ApiResponse, InventorySummary, InventoryRecord, BloodType } from "../types";
 
-export default async function fetchInventoryAction(org_id: string) {
+export default async function fetchInventoryAction(org_id: string): Promise<ApiResponse<InventorySummary[]>> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("blood_inventory")
@@ -16,7 +17,7 @@ export default async function fetchInventoryAction(org_id: string) {
   return { success: true, data };
 }
 
-export async function fetchAllInventory(org_Id: string) {
+export async function fetchAllInventory(org_Id: string): Promise<ApiResponse<InventoryRecord[]>> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("blood_stocks")
@@ -33,7 +34,7 @@ export async function fetchAllInventory(org_Id: string) {
 export async function updateInventoryRecord(
   stock_id: string,
   new_units?: number | null
-) {
+): Promise<ApiResponse<any>> {
   if (!stock_id || new_units === null || new_units === undefined) {
     console.log("Invalid input: inv_id or new_units is null/undefined");
     return { success: false, error: "Invalid input" };
@@ -53,10 +54,10 @@ export async function updateInventoryRecord(
 
 export async function addNewInventoryRecord(
   org_id: string,
-  type: string,
+  type: BloodType,
   quantity: number,
   expiry_date: string
-) {
+): Promise<ApiResponse<any>> {
   if (!org_id || !type || quantity <= 0 || !expiry_date) {
     console.log("Invalid input: Missing or invalid parameters");
     return { success: false, error: "Invalid input" };

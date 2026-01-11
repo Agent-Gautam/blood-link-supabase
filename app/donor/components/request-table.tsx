@@ -39,17 +39,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-
-export interface BloodRequest {
-  id: string;
-  blood_type: string;
-  units_needed: number;
-  urgency: boolean;
-  request_date: string;
-  status: "PENDING" | "FULFILLED" | "ACKNOWLEDGED";
-  fulfilled_date: string | null;
-  organisations: { name: string };
-}
+import { BloodRequest } from "@/app/types";
 
 interface RequestHistoryProps {
   requests: BloodRequest[];

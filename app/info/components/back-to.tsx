@@ -46,7 +46,7 @@ export default function BackTo() {
       onClick={() => router.back()}
     >
       <CircleArrowLeft className="mr-2" />
-      <span>Back to {prevPage}</span>
+      <span>Back</span>
     </Button>
   );
 }

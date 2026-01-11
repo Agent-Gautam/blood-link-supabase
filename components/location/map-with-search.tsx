@@ -7,17 +7,20 @@ import { CoordinatesToLocation } from "@/app/actions/map-actions/coordinates-to-
 import { Coordinates } from "@/lib/types";
 import { toast, Toaster } from "sonner";
 
+import { Location } from "@/lib/types";
+
 interface MapWithSearchProps {
   initialCoordinates?: Coordinates | null;
   handleLocationChange: (
-    location: {
+    location: Location,
+    coordinates: { lat: number; lng: number },
+    details?: {
+      address: string;
       city: string;
       state: string;
-      country: string;
-      address: string;
       postalCode: string;
-    },
-    coordinates: { lat: number; lng: number }
+      country: string;
+    }
   ) => void;
 }
 
@@ -72,16 +75,15 @@ export default function MapWithSearch({
       { openPopup: true }
     );
 
-    handleLocationChange(
-      {
-        city: dt.city || dt.village || dt.subDistrict,
-        state: dt.state,
-        country: dt.area,
-        address: dt.formatted_address,
-        postalCode: dt.pincode,
-      },
-      { lat, lng }
-    );
+    const locationAddress: Location = dt.formatted_address || "";
+    const locationDetails = {
+      address: dt.formatted_address || "",
+      city: dt.city || "",
+      state: dt.state || "",
+      postalCode: dt.pincode || "",
+      country: dt.area || "",
+    };
+    handleLocationChange(locationAddress, { lat, lng }, locationDetails);
     setMessage("");
     console.log(e);
   };
@@ -152,8 +154,7 @@ export default function MapWithSearch({
                     mark.fitbounds({ padding: 100 });
                   }
                 );
-                
-                
+
                 //  console.log(mark);
                 // mark.fitbounds({ padding: 100 });
                 // var options = {

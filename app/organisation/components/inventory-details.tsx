@@ -1,13 +1,57 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { formatDate } from "@/lib/utils";
-import { Droplet } from "lucide-react";
+import { Droplet, Plus } from "lucide-react";
+import { InventorySummary } from "../types";
+import EmptyState from "@/components/empty-state";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function InventoryDetails({
   inventoryDetails,
 }: {
-  inventoryDetails: { blood_type: string; total_units: number, last_updated: string }[];
-  }) {
+  inventoryDetails: InventorySummary[];
+}) {
+  if (!inventoryDetails || inventoryDetails.length === 0) {
+    return (
+      <div>
+        <h2 className="text-xl font-bold mb-4">Blood Type Inventory</h2>
+        <EmptyState
+          title="No Inventory Yet"
+          description="Your blood bank inventory is empty. Start by adding your first blood units to begin tracking and managing your stock effectively."
+          icon={Droplet}
+          showAddButton={false}
+          footer={
+            <>
+              <Link href="/organisation/inventory/all">
+                <Button size="lg" className="gap-2 mb-8">
+                  <Plus className="h-5 w-5" />
+                  Add First Inventory
+                </Button>
+              </Link>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {["A+", "B+", "AB+", "O+"].map((type) => (
+                  <div
+                    key={type}
+                    className="flex flex-col items-center p-4 rounded-lg border border-dashed border-border bg-muted/30"
+                  >
+                    <Droplet className="h-6 w-6 text-muted-foreground/50 mb-2" />
+                    <span className="text-sm font-medium text-muted-foreground/70">
+                      {type}
+                    </span>
+                    <span className="text-xs text-muted-foreground/50">
+                      0 units
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
+          }
+        />
+      </div>
+    );
+  }
+
   return (
     <div>
       <h2 className="text-xl font-bold mb-4">Blood Type Inventory</h2>

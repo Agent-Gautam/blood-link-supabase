@@ -1,46 +1,71 @@
 "use server";
 import { createClient, getUser } from "@/utils/supabase/server";
+import { ApiResponse } from "@/app/types";
+import { DonationCampResult, OrganisationFilter } from "../types";
 
 export async function fetchDonationCamps(
-  filters = {},
-  sort = { column: "start_date", order: "asc" },
-  search = ""
-) {
+  sort = "start_date-asc",
+  search: string | null = null,
+  orgIds: string | null = null,
+  limit: number = 10,
+  offset: number = 0,
+  lat: number | null = null,
+  lng: number | null = null
+): Promise<ApiResponse<DonationCampResult[]>> {
+  const user = await getUser();
+  const donorId = user?.id;
+
+  // If lat/lng provided, use geolocation; otherwise use donor_id
+  const useGeolocation = lat !== null && lng !== null;
+
+  if (!useGeolocation && !donorId) {
+    return { success: false, error: "User not authenticated" };
+  }
+
   const supabase = await createClient();
+  // Handle orgIds: if null or empty string, pass null to fetch all camps
+  const orgIdsArray =
+    orgIds && orgIds.trim() ? orgIds.split(",").filter(Boolean) : null;
+  // Handle search: if null or empty string, pass null to fetch all camps
+  const searchQuery = search && search.trim() ? search : null;
+  const [column, order] = sort.split("-");
 
-  let query = supabase.from("donation_camps_with_details").select("*");
+  const query: any = {
+    p_limit: limit,
+    p_offset: offset,
+    p_search: searchQuery,
+    p_org_ids: orgIdsArray,
+    p_sort_by: column, // or 'start_date' / 'end_date'
+    p_order: order, // 'asc' / 'desc'
+  };
 
-  // Apply filters
-  for (const [key, value] of Object.entries(filters)) {
-    query = query.eq(key, value);
+  // Use geolocation if provided, otherwise use donor_id
+  if (useGeolocation) {
+    query.p_lat = lat;
+    query.p_lng = lng;
+  } else {
+    query.p_donor_id = donorId;
   }
 
-  // Apply search
-  if (search) {
-    query = query.ilike("name", `%${search}%`);
-  }
-
-  // Apply sorting
-  if (sort && sort.column) {
-    query = query.order(sort.column, { ascending: sort.order === "asc" });
-  }
-
-  const { data, error } = await query;
-
+  const { data, error } = await supabase.rpc(
+    "get_nearby_donation_camps",
+    query
+  );
   if (error) {
     console.error("Error fetching donation camps:", error);
-    return [];
+    return { success: false, error: error.message };
   }
-
-  return data;
+  return { success: true, data: data as DonationCampResult[] };
 }
 
-export async function registerForCamp(campId: string) {
+export async function registerForCamp(
+  campId: string
+): Promise<ApiResponse<void>> {
   const user = await getUser();
   if (!user) {
-    throw new Error("User not authenticated");
+    return { success: false, error: "User not authenticated" };
   }
-  const donorId = user.donor_id;
+  const donorId = user.id;
   const supabase = await createClient();
   const { error } = await supabase
     .from("camp_registrations")
@@ -53,19 +78,57 @@ export async function registerForCamp(campId: string) {
   return { success: true, message: "Successfully registered for the camp." };
 }
 
-export async function fetchCampRegistrations() {
-    const user = await getUser();
-    const donorId = user?.donor_id;
-    const supabase = await createClient();
-    const { data, error } = await supabase
-        .from("camp_registrations")
-        .select("camp_id")
-        .eq("donor_id", donorId);
+export async function checkCampRegistration(
+  campId: string
+): Promise<ApiResponse<boolean>> {
+  const user = await getUser();
+  const donorId = user?.id;
+  if (!donorId) {
+    return { success: false, error: "User not authenticated" };
+  }
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("camp_registrations")
+    .select("id")
+    .eq("donor_id", donorId)
+    .eq("camp_id", campId)
+    .maybeSingle();
 
   if (error) {
-    console.log("Error checking registration:", error.message);
-    return [];
-    }
-    const reg = data.map(item => item.camp_id);
-  return reg;
+    console.error("Error checking registration:", error.message);
+    return { success: false, error: error.message };
+  }
+  return { success: true, data: !!data };
+}
+
+export async function fetchOrganisationsForFilters(
+  limit: number = 50
+): Promise<ApiResponse<OrganisationFilter[]>> {
+  const user = await getUser();
+  const donorId = user?.id;
+  if (!donorId) {
+    return { success: false, error: "User not authenticated" };
+  }
+  const supabase = await createClient();
+
+  const { data, error } = await supabase.rpc("get_nearby_organisations", {
+    p_donor_id: donorId,
+    p_limit: limit,
+  });
+
+  if (error) {
+    console.error("Error fetching organisations for filters:", error);
+    return { success: false, error: error.message };
+  }
+
+  // Map the SQL function result to OrganisationFilter type
+  // SQL returns distance_meters, but type expects distance_metres
+  const mappedData: OrganisationFilter[] = (data || []).map((org: any) => ({
+    id: org.organisation_id,
+    type: org.type,
+    name: org.name,
+    distance_metres: org.distance_meters || 0,
+  }));
+
+  return { success: true, data: mappedData };
 }

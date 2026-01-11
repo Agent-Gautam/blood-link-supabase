@@ -32,7 +32,7 @@ interface OrganizationDetails {
     bannerUrl?: string;
   };
 
-export default async function OrganizationDetailsPage({ params }: { params: { id: string } }) {
+export default async function OrganizationDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const searchParams = await params;
   const organizationId = searchParams.id;
   const res = await fetchOrganisationDetails(organizationId);

@@ -1,10 +1,11 @@
 import StatBox from "@/components/dashboard/stat-box";
 import { AlertTriangle, Calendar, CheckCircle, Droplet } from "lucide-react";
+import { InventoryStats as InventoryStatsType } from "../types";
 
 export default function InventoryStats({
   inventory
 }: {
-    inventory: { blood_type: string; total_units: number }[];
+    inventory: InventoryStatsType[];
 }) {
   const criticalLevels = inventory.filter((item) => item.total_units < 30);
 

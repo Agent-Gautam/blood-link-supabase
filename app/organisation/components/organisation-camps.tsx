@@ -14,6 +14,9 @@ import debounce from "lodash.debounce";
 import { toast } from "sonner";
 import { fetchAllCamps } from "../camps/actions";
 import CampDetailsShow from "./camp-details";
+import EmptyState from "@/components/empty-state";
+import { Calendar, Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const sortOptions = [
   { label: "Start Date (Asc)", value: "start_date-asc" },
@@ -23,7 +26,7 @@ const sortOptions = [
 ];
 
 export default function AllCamps({ org_id }: { org_id: string }) {
-
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [location, setLocation] = useState("");
   const [sort, setSort] = useState(sortOptions[0].value);
@@ -104,10 +107,18 @@ export default function AllCamps({ org_id }: { org_id: string }) {
         </Button>
       </div>
       <div className="flex flex-col gap-3">
-        {camps.length === 0 && !loading && <div>No camps found.</div>}
-        {camps.map((camp) => (
-          <CampDetailsShow campData={camp} key={camp.id} />
-        ))}
+        {camps.length === 0 && !loading ? (
+          <EmptyState
+            title="No Donation Camps Yet"
+            description="Start organizing donation camps to collect blood from donors in your community. Create your first camp to begin."
+            icon={Calendar}
+            buttonText="Create First Camp"
+            buttonIcon={Plus}
+            onAdd={() => router.push("/organisation/camps/update")}
+          />
+        ) : (
+          camps.map((camp) => <CampDetailsShow campData={camp} key={camp.id} />)
+        )}
       </div>
     </div>
   );
