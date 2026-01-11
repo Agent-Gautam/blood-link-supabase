@@ -22,7 +22,7 @@ type OrganisationCardProps = {
   organisation: OrganisationsWithBlood;
   selected: boolean;
   onSelect: (id: string) => void;
-  showInventory: boolean;
+  showInventory?: boolean;
 };
 
 export default function OrganisationCard({

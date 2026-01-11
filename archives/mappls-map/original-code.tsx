@@ -1,12 +1,12 @@
-"use client"
+"use client";
 
 import { mappls, mappls_plugin } from "mappls-web-maps";
 import { useEffect, useRef, useState } from "react";
 
 const mapplsClassObject = new mappls();
 const mapplsPluginObject = new mappls_plugin();
-var callback;
-const PlaceSearchPlugin = ({ map }) => {
+var callback: ((data: any) => void) | undefined;
+const PlaceSearchPlugin = ({ map }: { map: any }) => {
   const placeSearchRef = useRef(null);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ const PlaceSearchPlugin = ({ map }) => {
 };
 
 const OriginalMap = () => {
-  const mapRef = useRef(null);
+  const mapRef = useRef<any>(null);
   const [isMapLoaded, setIsMapLoaded] = useState(false);
 
   const auto = {

@@ -14,10 +14,10 @@ export default function DonorDialog({ campId }: { campId: string }) {
   const [donor, setDonor] = useState<any>(null);
 
   const handleSearchResult = (result: any) => {
-    if (result.error) {
+    if (!result.success || !result.data) {
       setState("not-found");
     } else {
-      setDonor(result.donor);
+      setDonor(result.data);
       setState("details");
     }
   };

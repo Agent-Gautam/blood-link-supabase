@@ -38,6 +38,7 @@ import TableSkeleton from "@/components/table-skeleton";
 import { toast } from "sonner";
 import { InventoryRecord } from "../types";
 import EmptyState from "@/components/empty-state";
+import { BloodType } from "@/app/types";
 
 export default function InventoryTable({ org_id }: { org_id: string }) {
   const [allInventory, setAllInventory] = useState<InventoryRecord[]>([]);
@@ -50,9 +51,12 @@ export default function InventoryTable({ org_id }: { org_id: string }) {
   const fetchInventory = async () => {
     setLoading(true);
     const result = await fetchAllInventory(org_id);
-    if (!result.success)
+    if (!result.success) {
       toast.error(`Error fetching innvetory ${result.error}`);
-    const inventories = result.data;
+      setLoading(false);
+      return;
+    }
+    const inventories = result.data || [];
     setAllInventory(inventories);
     setLoading(false);
   };
@@ -220,7 +224,7 @@ function AddInventory({
   org_id,
   fetchInventory,
 }: AddInventoryProps) {
-  const [newBloodType, setNewBloodType] = useState("A+");
+  const [newBloodType, setNewBloodType] = useState<BloodType>("A+");
   const [newQuantity, setNewQuantity] = useState<string>("");
   const [newExpiryDate, setNewExpiryDate] = useState<string>("");
   const [loading, setLoading] = useState(false);
@@ -268,7 +272,7 @@ function AddInventory({
             </label>
             <Select
               value={newBloodType}
-              onValueChange={(value) => setNewBloodType(value)}
+              onValueChange={(value) => setNewBloodType(value as BloodType)}
             >
               <SelectTrigger id="bloodType" className="col-span-3">
                 <SelectValue placeholder="Select blood type" />

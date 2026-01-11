@@ -21,8 +21,7 @@ import { Input } from "@/components/ui/input";
 import { SubmitButton } from "@/components/submit-button";
 import { RegisterOrganisation } from "./actions";
 import { FormMessage, Message } from "@/components/form-message";
-import { Coordinates } from "@/archives/v0-map/map-container";
-import { Location } from "@/lib/types";
+import { Coordinates, Location } from "@/lib/types";
 import GeoLocation from "@/components/location/geo-location-access";
 import {
   Dialog,
@@ -38,6 +37,7 @@ import { redirect } from "next/navigation";
 import FileUpload from "@/components/file-upload";
 import { uploadEntityImage } from "@/app/actions/bucket-actions/store";
 import { getUser } from "@/utils/supabase/server";
+import { User } from "@supabase/supabase-js";
 const MapWithSearch = dynamic(
   () => import("@/components/location/map-with-search"),
   {
@@ -61,12 +61,12 @@ export default function OrganisationRegistration(props: {
   const [locationDetails, setLocationDetails] =
     useState<LocationDetails | null>(null);
   const [file, setFile] = useState<File | null>(null);
-  const [user, setUser] = useState();
+  const [user, setUser] = useState<(User["user_metadata"] & { id: string }) | undefined>(undefined);
 
   useEffect(() => {
     async function fetchUser() {
       const user = await getUser();
-      setUser(user);
+      setUser(user as User["user_metadata"] & { id: string });
     }
     fetchUser();
   }, []);
@@ -124,8 +124,8 @@ export default function OrganisationRegistration(props: {
       return;
     }
     // uploading image to supabase storage
-    if (file) {
-      const fileRes = await uploadEntityImage("organisation", user?.id, file);
+    if (file && user?.id) {
+      const fileRes = await uploadEntityImage("organisation", user.id, file);
     }
 
     // Append location data to formData

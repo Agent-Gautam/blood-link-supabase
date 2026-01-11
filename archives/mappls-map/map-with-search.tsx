@@ -2,12 +2,12 @@
 
 import { mappls, mappls_plugin } from "mappls-web-maps";
 import { useEffect, useRef, useState } from "react";
-import { Input } from "../ui/input";
+import { Input } from "@/components/ui/input";
 import { CoordinatesToLocation } from "@/app/actions/map-actions/coordinates-to-location";
 import { Coordinates } from "@/lib/types";
 
 export const mapplsClassObject = new mappls();
-const mapplsPluginObject = new mappls_plugin().;
+const mapplsPluginObject = new mappls_plugin();
 
 interface MapWithSearchProps {
   initialCoordinates?: Coordinates | null;

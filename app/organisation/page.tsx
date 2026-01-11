@@ -99,7 +99,7 @@ export default async function OrganisationDashboard() {
             </Button>
           </CardHeader>
           <div className="p-6">
-            <BloodRequests org_id={orgData.id} requestsData={bloodRequests} />
+            <BloodRequests org_id={orgData.id} />
           </div>
         </Card>
 

@@ -13,11 +13,11 @@ export default async function CampDashboard({
 }) {
   const parameters = await params;
   const campId = parameters.id;
-  const { camp, registrations, donations, donors, error } =
-    await fetchCampData(campId);
-  if (!camp) {
+  const response = await fetchCampData(campId);
+  if (!response.success || !response.data) {
     return <EmptyState title="Camp doesn't exist" description="Camp not found or has been removed." />;
   }
+  const { camp, registrations, donations, donors } = response.data;
 
   // if (error) {
   //   redirect("/not-found");

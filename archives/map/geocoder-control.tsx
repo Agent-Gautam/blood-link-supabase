@@ -12,7 +12,7 @@ import MaplibreGeocoder, {
   MaplibreGeocoderApi,
   MaplibreGeocoderOptions,
 } from "@maplibre/maplibre-gl-geocoder";
-import 'maplibre-gl/dist/maplibre-gl.css';
+import "maplibre-gl/dist/maplibre-gl.css";
 import "@maplibre/maplibre-gl-geocoder/dist/maplibre-gl-geocoder.css";
 
 type GeocoderControlProps = Omit<
@@ -43,9 +43,14 @@ const geocoderApi: MaplibreGeocoderApi = {
           feature.bbox[1] + (feature.bbox[3] - feature.bbox[1]) / 2,
         ];
         const point = {
-          type: "Feature",
+          type: "Feature" as const,
+          id:
+            feature.id ||
+            feature.properties?.place_id ||
+            feature.properties?.osm_id ||
+            String(Math.random()),
           geometry: {
-            type: "Point",
+            type: "Point" as const,
             coordinates: center,
           },
           place_name: feature.properties.display_name,
@@ -61,6 +66,7 @@ const geocoderApi: MaplibreGeocoderApi = {
     }
 
     return {
+      type: "FeatureCollection",
       features,
     };
   },

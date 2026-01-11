@@ -44,9 +44,8 @@ export default function AllCamps({ org_id }: { org_id: string }) {
       const filters: any = {};
       if (locationVal) filters.location = locationVal;
       const result = await fetchAllCamps(
-        org_id,
         filters,
-        getSortObj(),
+        sortVal,
         searchVal
       );
       if (!result.success) {

@@ -9,7 +9,7 @@ export default async function InventoryPage() {
   const user = await getUser();
   const org_id = user.id;
   const fetchResult = await fetchInventoryAction(org_id);
-  const inventory = fetchResult?.data;
+  const inventory = fetchResult?.data || [];
   return (
     <div>
       <Button>

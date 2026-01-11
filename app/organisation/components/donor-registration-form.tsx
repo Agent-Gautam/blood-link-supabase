@@ -19,10 +19,11 @@ export function DonorRegistrationForm({
 }) {
   const handleRegister = async (formData: FormData) => {
     const result = await registerDonor(formData);
-    if (result.error) console.log(result.error);
-    if (result.donor) {
-      onRegister(result.donor);
+    if (!result.success || !result.data) {
+      console.log(result.error);
+      return;
     }
+    onRegister(result.data);
   };
 
   return (
